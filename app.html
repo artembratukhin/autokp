@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head>
 <meta charset="utf-8">
-<base target="_top">
 <title>АвтоКП WGBG</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Onest:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Roboto+Serif:ital,opsz,wght@0,8..144,300;0,8..144,400;0,8..144,500;1,8..144,300;1,8..144,400&display=swap">
@@ -456,6 +455,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
       <p class="hint" id="pdfStatus"></p>
       <button type="button" id="pdfImgBtn" class="linkbtn full">Запасной вариант: PDF через печать (принтер «Сохранить как PDF», колонтитулы выключить)</button>
       <a id="pdfOpen" class="linkbtn full" hidden target="_blank" rel="noopener">Открыть готовый PDF</a>
+      <button id="pdfShare" type="button" class="btn full" hidden>Сохранить / отправить PDF</button>
       <button type="button" id="toTop" class="linkbtn full" hidden>↑ Наверх, к настройкам</button>
     </fieldset>
   </div>
@@ -1527,7 +1527,11 @@ async function imagePdf(){
       blob=pdf.output("blob");if(blob.size<=PDF_LIMIT||q<=.5)break;q-=.08;
     }
     const url=URL.createObjectURL(blob),name=kpName()+".pdf";
-    const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    const a=document.createElement("a");a.href=url;a.download=name;a.target="_self";document.body.appendChild(a);a.click();a.remove();
+    // телефон: запасная кнопка «Поделиться» (Сохранить в Файлы, Telegram, WhatsApp…)
+    const file=new File([blob],name,{type:"application/pdf"});
+    if(MOBILE&&navigator.canShare&&navigator.canShare({files:[file]})){const b=$("pdfShare");b.hidden=false;
+      b.onclick=()=>navigator.share({files:[file],title:name}).catch(()=>{})}
     $("pdfOpen").href=url; // ссылка «Открыть, если не скачался» скрыта до тестов
     $("pdfStatus").textContent="PDF готов.";
   }catch(e){$("pdfStatus").textContent="Не получилось собрать PDF: "+(e&&e.message||e)}
