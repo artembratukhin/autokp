@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>АвтоКП</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0d1a1d;color:#e4eeef;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px}
+  .box{max-width:420px;text-align:center}
+  .spin{width:28px;height:28px;margin:0 auto 14px;border:3px solid #24393e;border-top-color:#6fb3c0;border-radius:50%;animation:s 1s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  button{margin-top:12px;font:inherit;padding:8px 18px;border-radius:8px;border:1px solid #6fb3c0;background:none;color:inherit;cursor:pointer}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="box" id="box"><div class="spin"></div><div id="msg">Загружаю АвтоКП…</div></div>
+<script>
+/* Загрузчик АвтоКП: берёт страницу app.html с этого сайта, шрифты и логотипы — с сервера Google,
+   собирает их вместе и показывает. Цены и картинки страница дальше запрашивает у сервера сама. */
+(async function(){
+  const msg=document.getElementById("msg");
+  const fail=t=>{document.getElementById("box").innerHTML='<div>Не удалось загрузить АвтоКП.<br><small>'+t+'</small></div><button onclick="location.reload()">Попробовать ещё раз</button>'};
+  if(!window.API_URL||!/\/exec(\?|$)/.test(window.API_URL))return fail("В config.js не указана ссылка на сервер (…/exec).");
+  const call=(fn,args)=>fetch(window.API_URL,{method:"POST",body:JSON.stringify({fn:fn,args:args||[]})}).then(r=>{if(!r.ok)throw new Error("сервер ответил "+r.status);return r.json()});
+  let cache=null;try{cache=JSON.parse(localStorage.getItem("autokp:assets")||"null")}catch(e){}
+  try{
+    const res=await Promise.all([
+      fetch("app.html?t="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("app.html: "+r.status);return r.text()}),
+      call("getAssets",[cache&&cache.ver||""])
+    ]);
+    const app=res[0],a=res[1];
+    if(!a.ok)throw new Error(a.error);
+    let assets=a.result.html;
+    if(assets==null){if(!cache)throw new Error("нет шрифтов");assets=cache.html}
+    else{try{localStorage.setItem("autokp:assets",JSON.stringify({ver:a.result.ver,html:assets}))}catch(e){}}
+    const html=app
+      .replace("<head>",()=>"<head><script>window.API_URL="+JSON.stringify(window.API_URL)+"<\/script>")
+      .replace("<?!= assets ?>",()=>assets);
+    document.open();document.write(html);document.close();
+  }catch(e){fail(e.message)}
+})();
+</script>
+</body>
+</html>

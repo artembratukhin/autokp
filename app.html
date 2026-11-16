@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<base target="_top">
+<title>АвтоКП WGBG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Onest:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Roboto+Serif:ital,opsz,wght@0,8..144,300;0,8..144,400;0,8..144,500;1,8..144,300;1,8..144,400&display=swap">
+<style>
+/* Layout: form column on the left, live 16:9 slide previews on the right; stacks on phones.
+   App chrome follows the viewer's theme; slides use fixed WGBG colors taken from the Figma file. */
+:root{
+  --bg:#f4f6f6; --panel:#ffffff; --fg:#13262b; --muted:#5d6f73; --line:#d9e1e2;
+  --accent:#1c4a54; --accent-fg:#ffffff; --field:#f9fbfb; --field-ro:#eef2f2; --warn:#9a6a1e;
+  --ui:"Manrope",system-ui,sans-serif;
+  --gold:linear-gradient(90deg,#D3AF7D 0%,#926F41 25%,#B1864B 50%,#D3AF7D 75%,#B1864B 100%);
+  --gold-shade:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,0));
+  --card-body:linear-gradient(180deg,#20424F 0%,#112830 100%);
+  --card-head:#06202A;
+  --slide-bg:linear-gradient(180deg,#20424F 0%,#031A23 100%);
+  --f-num:"Gotham Pro","Montserrat",Arial,sans-serif; --f-disp:"Gilroy","Onest","Montserrat",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1a1d; --panel:#132428; --fg:#e4eeef; --muted:#97abae; --line:#24393e;
+  --accent:#6fb3c0; --accent-fg:#0b1a1d; --field:#0f1f23; --field-ro:#18292d; --warn:#e2b86f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1a1d; --panel:#132428; --fg:#e4eeef; --muted:#97abae; --line:#24393e;
+  --accent:#6fb3c0; --accent-fg:#0b1a1d; --field:#0f1f23; --field-ro:#18292d; --warn:#e2b86f; color-scheme:dark}
+/* Grand Life: интерфейс в бордово-кремовых тонах (только цвета, разметка та же) */
+:root.proj-gl{--bg:#f7f1ea;--panel:#fffaf4;--fg:#2b0a12;--muted:#7a5a55;--line:#ead9c6;--accent:#6b0f24;--accent-fg:#fff;--field:#fdf8f2;--field-ro:#f3e8dc;--warn:#8a5a1e}
+@media (prefers-color-scheme:dark){:root.proj-gl:not([data-theme="light"]){--bg:#1a0709;--panel:#2a0c11;--fg:#f3e6e0;--muted:#bfa39c;--line:#45191f;--accent:#d4a86f;--accent-fg:#2a0c11;--field:#22090d;--field-ro:#301015;--warn:#e2b86f}}
+:root.proj-gl[data-theme="dark"]{--bg:#1a0709;--panel:#2a0c11;--fg:#f3e6e0;--muted:#bfa39c;--line:#45191f;--accent:#d4a86f;--accent-fg:#2a0c11;--field:#22090d;--field-ro:#301015;--warn:#e2b86f}
+/* плавная смена темы */
+body,form,fieldset,.dlcard,.top,input,select,button,.seg button,.kplist li,label,.hint,.cap{transition:background-color .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--ui);-webkit-text-size-adjust:100%}
+body.fonts-analog{--f-num:"Montserrat",Arial,sans-serif;--f-disp:"Onest","Montserrat",Arial,sans-serif}
+body.fonts-manrope{--f-num:"Manrope",Arial,sans-serif;--f-disp:"Manrope",Arial,sans-serif}
+[hidden]{display:none!important}
+
+.app{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:24px;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1600px;margin:0 auto}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}}
+header.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+header.top h1{font-size:22px;margin:0;font-weight:700}
+header.top p{margin:0;color:var(--muted);font-size:13px}
+
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+/* блок «Скачать» едет вместе с прокруткой до последнего слайда */
+.dlcard{position:sticky;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:5}
+html{scroll-behavior:smooth}
+form{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:18px;align-self:start;min-width:0}
+fieldset{border:0;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;min-width:0}
+/* телефон: iOS растягивает страницу по самому длинному пункту списка или полю даты — запрещаем */
+html,body{max-width:100%;overflow-x:clip} /* clip, а не hidden: hidden ломает «липкий» блок «Скачать» */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+fieldset>*,.withseg>*,.side,.dlcard,.mbox{min-width:0;max-width:100%}
+select,input,textarea,button{max-width:100%;min-width:0}
+input[type=date]{width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none;min-height:38px}
+select{text-overflow:ellipsis}
+@media (max-width:860px){.top p{overflow-wrap:anywhere}.dlcard{position:static}
+  /* iPhone: Google показывает страницу во «врезке», которую Safari растягивает по содержимому.
+     Делаем прокрутку внутри страницы — тогда врезка остаётся ровно по ширине экрана */
+  html,body{height:100%;overflow:hidden}
+  .app{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  body.printing .app{display:none!important}}
+legend{grid-column:1/-1;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:0;margin-bottom:8px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+label.full,.full{grid-column:1/-1}
+input,select{font:inherit;font-size:14px;color:var(--fg);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;width:100%;box-sizing:border-box;font-variant-numeric:tabular-nums}
+input[readonly]{background:var(--field-ro);color:var(--muted);cursor:default}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+label.check{flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--fg);cursor:pointer}
+label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;accent-color:var(--accent)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:13px;border:0;background:var(--field);color:var(--fg);padding:8px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.withseg{display:flex;gap:6px}
+.withseg input{flex:1}
+.withseg .seg button{padding:8px 10px;flex:0 0 auto}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600;font-size:15px;padding:12px}
+.btn[disabled]{opacity:.6;cursor:wait}
+.linkbtn{font:inherit;font-size:12px;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:2px;text-align:left}
+.btn{font:inherit;font-size:13px;border:1px solid var(--accent);background:transparent;color:var(--fg);border-radius:8px;padding:8px;cursor:pointer}
+#unitCount{color:var(--muted);font-size:11px;opacity:.8}
+.lbl{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#unitCount:not(:empty)::before{content:"· "}
+.hint{grid-column:1/-1;font-size:12px;color:var(--muted);margin:0;font-variant-numeric:tabular-nums}
+.note{grid-column:1/-1;font-size:12px;color:var(--warn);margin:0}
+
+.kplist{grid-column:1/-1;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
+.kplist li{display:flex;gap:2px;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:var(--field);overflow:hidden}
+.kplist li.on{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.kplist button{font:inherit;font-size:12px;background:none;border:0;color:var(--fg);cursor:pointer;padding:7px 8px}
+.kplist .sel{flex:1;text-align:left;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kplist .sel small{color:var(--muted)}
+.kplist .ic{color:var(--muted);padding:7px 6px}
+.kplist .ic:hover{color:var(--fg)}
+.mbox{display:grid;gap:8px}
+.mbox[hidden],fieldset[hidden]{display:none}
+.slide.cover.mcover{background:var(--pat,none) 0 0/1920px 1080px no-repeat,var(--slide-bg)}
+.slide.cover.mcover .tile{position:absolute;border-radius:24px;overflow:hidden;background:#20424f}
+.slide.cover.mcover .tile .bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.slide.cover.mcover .tile .ph{position:absolute;inset:0;display:grid;place-items:center;padding:30px;text-align:center}
+.slide.cover.mcover .tile .ph span{font-size:22px}
+.slide.cover.mcover .tshade{position:absolute;inset:0 0 auto 0;height:170px;background:linear-gradient(180deg,rgba(0,0,0,.32),rgba(0,0,0,0))}
+.slide.cover.mcover .tile .logo{top:34px;left:50%;right:auto;transform:translateX(-50%) scale(.9);transform-origin:50% 0;white-space:nowrap}
+.slide.cover.mcover .tblock{position:absolute;display:flex;flex-direction:column;justify-content:flex-end;padding:0 0 72px 70px;box-sizing:border-box;overflow:hidden}
+.slide.cover.mcover:not(.panels) .kicker{position:static;font-size:30px;font-weight:500;margin-bottom:34px}
+.slide.cover.mcover:not(.panels) h2{position:static;width:auto;margin-right:50px;font-size:58px;line-height:1.14}
+.slide.cover.mcover:not(.panels) .deadline{position:relative;right:auto;bottom:auto;width:500px;height:86px;font-size:23px;margin-top:40px;flex:0 0 auto}
+.slide.cover.panels{background:#0f1a17}
+.slide.cover.panels .pnl{position:absolute;overflow:hidden;background:#20424f}
+.slide.cover.panels .pnl .bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.slide.cover.panels .pnl .ph{position:absolute;inset:0;display:grid;place-items:center;padding:30px;text-align:center}
+.slide.cover.panels .pnl .ph span{font-size:22px}
+.slide.cover.panels .shade{height:560px}
+.slide.cover.panels.logoR .logo{left:auto;right:80px}
+
+/* ---------- Grand Life ---------- */
+.glflag{position:absolute;top:0;right:78px;width:141px;height:148px;display:block}
+.slide.gl{font-family:"Brygada 1918",Georgia,serif}
+.calcslide.gl,.partners.gl,.reasons.gl{background:var(--gl-bg,none) 0 0/1920px 1080px no-repeat,#440012}
+.cover.gl .dim{position:absolute;inset:0;background:rgba(20,4,6,.18)}
+.cover.gl .shade{height:620px;background:linear-gradient(0deg,rgba(28,6,8,.78),rgba(28,6,8,0))}
+.cover.gl .kicker{font-family:"Ouvality",cursive;font-weight:400;font-size:92px;line-height:.6;color:#dfbf91;bottom:218px;left:78px}
+.cover.gl h2{font-family:"Brygada 1918",Georgia,serif;font-weight:500;font-size:66px;line-height:1.1;letter-spacing:.01em;bottom:76px;width:1150px}
+.gl h2{font-family:"Brygada 1918",Georgia,serif!important;font-weight:600!important;letter-spacing:.01em!important;font-size:56px!important}
+.partners.gl .sub{font-family:"Brygada 1918",Georgia,serif;font-size:27px;letter-spacing:0;top:150px}
+.gl .ptable{box-shadow:none;border:2px solid #c9a46a;background:#29010a;top:270px;height:720px;border-radius:24px;box-sizing:border-box}
+.gl .ptable .lg img[alt="World Hotels"]{width:300px;height:auto}
+.gl .ptable .lg{background:transparent;border-bottom:2px solid #c9a46a}
+.gl .ptable .lg+.lg::before,.gl .ptable .col+.col::before{background:linear-gradient(180deg,rgba(201,164,106,0),rgba(201,164,106,.45),rgba(201,164,106,0))}
+.gl .st b{font-family:"Brygada 1918",Georgia,serif;font-size:46px;color:#dcb882}
+.gl .st span{font-size:18px;color:#eadcca;opacity:1}
+.reasons.gl .rgrid{top:262px;grid-template-columns:repeat(3,558px);grid-template-rows:272px 272px;gap:42px}
+.reasons.gl .rc{background:linear-gradient(180deg,#2c010c,#22000a);border:2px solid #c9a46a;box-shadow:none;padding:30px 38px 0;border-radius:22px}
+.reasons.gl .rc .hd{border-bottom:1.5px solid rgba(220,184,130,.3);gap:24px;padding-bottom:14px;margin-bottom:18px}
+.reasons.gl .rc .n{font-family:"Brygada 1918",Georgia,serif;font-size:84px;font-weight:500;width:46px;flex:0 0 46px;background:linear-gradient(180deg,#f1d6a3 0%,#c99d5c 60%,#9a7134 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.reasons.gl .rc .t{font-family:"Brygada 1918",Georgia,serif;font-size:30px;font-weight:500;letter-spacing:0;line-height:1.2;white-space:normal}
+.reasons.gl .rc p{font-family:"Brygada 1918",Georgia,serif;font-size:20px;line-height:1.42;color:#eadcca;opacity:1}
+.calcslide.gl .left{background:#f2e3d0;border-radius:0 30px 30px 0;color:#45010c;padding-top:72px}
+.calcslide.gl .cat{background:none!important;color:#5e0b1f;font-family:"Brygada 1918",Georgia,serif;font-size:42px;font-weight:600;letter-spacing:.02em;height:auto;padding:0}
+.calcslide.gl .cat::before{display:none}
+.calcslide.gl .cat.edge{box-shadow:none;border:0}
+.calcslide.gl .cat .share{margin-left:14px;font-size:30px}
+.calcslide.gl .specs{color:#5c4038;font-size:21px;gap:0;margin-top:16px}
+.calcslide.gl .specs span+span{border-left:2px solid #45010c;padding-left:18px;margin-left:18px}
+.calcslide.gl .specs b{color:#2d070d;font-weight:400;font-size:25px}
+.calcslide.gl .plan{border-color:#d8c3a8;color:#8a6b5a}
+.calcslide.gl .card{box-shadow:none;border:2px solid #e9d4b4;box-sizing:border-box;font-family:"Brygada 1918",Georgia,serif}
+.calcslide.gl .card .h{background:#e8cca3;color:#3d0a12;font-size:21px;font-weight:600;letter-spacing:.02em}
+.calcslide.gl .card .h span{opacity:1}
+.calcslide.gl .card .b{background:#fcf5e5;color:#2d070d;font-size:52px}
+.calcslide.gl .card .b.split>i{background:rgba(120,72,40,.22)}
+.calcslide.gl .card.gold{border-color:#d9b98a}
+.calcslide.gl .card.gold .h,.calcslide.gl .card.gold .b{color:#fff}
+.calcslide.gl .card.gold .h{background:var(--gold)}
+.calcslide.gl .card.gold .b{background:var(--gold-shade),var(--gold)}
+.calcslide.gl .sm{color:#5c4038}
+.calcslide.gl .inst{color:#2d070d}
+.calcslide.gl .terms{background:var(--gold);color:#fff;font-family:"Brygada 1918",Georgia,serif}
+.calcslide.gl .terms b{font-family:"Brygada 1918",Georgia,serif}
+.calcslide.gl .calcbadge span,.cover.gl .deadline span{font-family:"Brygada 1918",Georgia,serif}
+.canvas .gl .cat{border:0!important}
+.canvas .gl .ptable{border:2px solid #c9a46a!important}
+.canvas .reasons.gl .rc{border:2px solid #c9a46a!important}
+.canvas .reasons.gl .rc .n{color:#dcb882}
+
+/* ---------- акция «Кредитные каникулы» ---------- */
+.pminst .card .b{display:flex;align-items:center;justify-content:center}
+.pminst .card .b>.pmrow{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;font-size:19px;line-height:1.2;width:100%;padding:0 10px;box-sizing:border-box}
+.promo .pmcards .card .h{font-size:20px;letter-spacing:.01em;padding:0 14px;white-space:nowrap;overflow:visible;text-overflow:clip}
+.pmrow b{font-family:var(--f-num);font-weight:500;font-size:27px;flex:0 0 auto}
+.pmrow .pmic{width:58px;height:58px;flex:0 0 58px;color:#fff}
+.pmrow i{width:2px;height:64px;flex:0 0 2px;background:rgba(255,255,255,.25);margin:0 16px}
+.pmrow span{font-size:22px;text-align:left;white-space:nowrap}
+.promo .pmsub{position:absolute;left:80px;top:160px;display:flex;align-items:center;gap:36px;font-size:30px;letter-spacing:.02em}
+.promo .pill{border:2px solid rgba(255,255,255,.85);border-radius:40px;padding:8px 28px 8px 22px;background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.08) 55%,rgba(255,255,255,.24));display:inline-flex;align-items:center;gap:12px}
+.promo .pill svg{width:26px;height:26px;flex:0 0 26px}
+.promo .pmart{position:absolute;left:300px;top:290px;width:600px;height:600px}
+.promo .pmart svg{position:absolute;inset:0}
+.promo .pml{position:absolute;color:#fff;text-align:left;transform:translateY(-50%)}
+.promo .pmr{position:absolute;transform:translateY(-50%)}
+.promo .pmr b{margin-left:-90px}
+.promo .pml b,.promo .pmr b{display:block;font-family:var(--f-num);font-weight:400;font-size:150px;line-height:1;letter-spacing:-.02em}
+.promo .pml span,.promo .pmr span{display:block;font-family:var(--f-disp);font-weight:600;font-size:31px;line-height:1.2;margin-top:6px}
+.promo .pmr b,.promo .pmr span{background:linear-gradient(90deg,#c49a62,#e2c38f 40%,#a5793f 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.promo .pmcards{position:absolute;left:1242px;top:222px;width:598px;display:flex;flex-direction:column;gap:40px}
+
+/* тёмная подложка-обводка под цифрами и подписями диаграммы (как в макете) */
+.promo .pml b,.promo .pml span,.promo .pmr b,.promo .pmr span{position:relative;z-index:1}
+.promo .pmart .halo{position:absolute;z-index:0;color:#0f2c35;pointer-events:none}
+.canvas .promo .pmr b,.canvas .promo .pmr span{background:none;color:#d3af7d;-webkit-text-stroke:0}
+/* поле имени: пока пустое — подсвечено */
+.mgrbox input:placeholder-shown{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.summary .cards{left:82px;width:1756px}
+.summary .row{grid-template-columns:1fr 1fr}
+.summary .card.instc{height:150px}
+.summary .card.instc .b>div{line-height:1}
+.summary .card .b.split>div{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.preview{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sw.skip .frame{opacity:.45;outline:2px dashed var(--warn);outline-offset:3px}
+.sw.skip .num{color:var(--warn);font-weight:600}
+.kpsum{margin:0;font-size:13px;color:var(--muted)}
+.cap{font-size:12px;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.frame{width:100%;max-width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+.slide{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;font-family:var(--f-num);color:#fff}
+
+/* ---------- slide elements (sizes from Figma, 1920×1080) ---------- */
+.logo{position:absolute;top:80px;right:80px;display:flex;align-items:center;gap:12px;height:39px}
+.logo .mark{flex:0 0 auto;align-self:flex-start;margin-right:-4px}
+.logo .wg{display:flex;flex-direction:column;line-height:1}
+.logo .wg b{font-size:21px;font-weight:500;letter-spacing:.01em}
+.logo .wg small{font-size:10.5px;font-weight:500;letter-spacing:.08em;margin-top:4px}
+.logo i{width:3px;height:39px;background:#fff}
+.logo .obj{font-size:24px;font-weight:500;letter-spacing:.06em}
+.cover .logo{left:80px;right:auto}
+
+.goldfill{background:var(--gold);position:relative}
+.goldfill.shade::before{content:"";position:absolute;inset:0;background:var(--gold-shade);border-radius:inherit;pointer-events:none}
+.goldfill>*{position:relative}
+.edge{box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 2px 0 0 rgba(255,255,255,.18),inset -2px 0 0 rgba(255,255,255,.18)}
+
+.cover{background:linear-gradient(180deg,#4b4f7d 0%,#a07ca3 30%,#e9a88f 46%,#2c3a3a 62%,#0f1a17 100%)}
+.cover .ph{position:absolute;inset:0;display:grid;place-items:center}
+.cover .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover .ph span{font-size:28px;padding:14px 26px;border:2px dashed rgba(255,255,255,.55);border-radius:12px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.18)}
+.cover .shade{position:absolute;inset:auto 0 0 0;height:520px;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent)}
+.cover .kicker{position:absolute;left:80px;bottom:228px;font-size:34px;font-weight:500}
+.cover h2{position:absolute;left:80px;bottom:80px;margin:0;width:1000px;font-family:var(--f-disp);font-weight:700;font-size:62px;line-height:1.12;letter-spacing:.06em;text-transform:uppercase}
+.deadline{position:relative;text-align:center;font-family:var(--f-disp);font-weight:700;letter-spacing:.04em;color:#fff;display:flex;align-items:center;justify-content:center}
+.deadline>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.deadline>span{position:relative;text-shadow:0 1px 2px rgba(70,45,10,.35)}
+.cover .deadline{position:absolute;right:80px;bottom:82px;width:560px;height:96px;font-size:26px;line-height:1.3}
+
+.calcslide,.partners,.reasons{background:var(--pat,none) 0 0/1920px 1080px no-repeat,var(--slide-bg)}
+/* Слайд 4 — заглушка интерьеров */
+.interiors{background:#fff;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;padding:10px;box-sizing:border-box}
+.mapslide{background:#0f2a33}
+.mapslide .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mapslide .ph{position:absolute;inset:60px;border:3px dashed rgba(255,255,255,.35);border-radius:20px;display:grid;place-items:center;text-align:center;font-size:30px;color:rgba(255,255,255,.8);padding:40px}
+.mapslide .ph small{display:block;font-size:22px;margin-top:10px;opacity:.8}
+.interiors.full{padding:0;display:block}
+.interiors .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.interiors .ph{border:3px dashed #c7d3d5;border-radius:16px;display:grid;place-items:center;color:#7d8d90;font-size:28px;text-align:center;padding:20px}
+.interiors .ph small{display:block;font-size:22px;margin-top:8px}
+/* Слайд 5 «8 причин» — размеры с макета 2000×1125, приведены к 1920×1080 */
+.reasons h2{position:absolute;left:80px;top:72px;margin:0;font-family:var(--f-disp);font-weight:700;font-size:60px;line-height:1;letter-spacing:.04em;text-transform:uppercase}
+.rgrid{position:absolute;left:82px;top:195px;width:1756px;display:grid;grid-template-columns:496px 386px 394px 415px;grid-template-rows:412px 368px;gap:24px 22px}
+.rc{border-radius:22px;background:linear-gradient(180deg,rgba(32,66,79,.92) 0%,rgba(17,40,48,.92) 100%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45),inset 1.5px 0 0 rgba(255,255,255,.14),inset -1.5px 0 0 rgba(255,255,255,.14),0 8px 24px rgba(0,0,0,.25);padding:14px 20px 0;box-sizing:border-box;overflow:hidden}
+.rc .hd{display:flex;align-items:center;gap:16px;padding-bottom:12px;margin-bottom:16px;border-bottom:1.5px solid rgba(255,255,255,.12)}
+.rc .n{font-size:78px;font-weight:300;line-height:1;width:52px;flex:0 0 52px;text-align:center;background:linear-gradient(180deg,#fff 0%,#8b9ca1 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rc .t{font-family:var(--f-disp);font-size:31px;font-weight:500;line-height:1.2;letter-spacing:.02em;white-space:nowrap}
+.rc .hd{min-width:0}
+.rc p{margin:0;font-size:21px;line-height:1.43;opacity:.85}
+/* Слайд 5 в варианте Sky Castle: свой фон с тканью, засечки, золотые номера */
+.reasons.sky,.partners.sky,.calcslide.sky{background:var(--sky-bg) 0 0/1920px 1080px no-repeat,#143140}
+.reasons.sky h2{font-family:"Roboto Serif",Georgia,serif;font-weight:400;text-transform:none;letter-spacing:0;font-size:60px;top:74px}
+.reasons.sky .rgrid{top:201px;grid-template-columns:423px 428px 452px 389px;grid-template-rows:378px 378px;gap:22px 21px}
+.reasons.sky .rc{background:linear-gradient(180deg,#0b2530 0%,#163844 100%);padding:16px 18px 0}
+.reasons.sky .hd{border-bottom:1.5px solid rgba(255,255,255,.35);gap:20px;padding-bottom:12px;margin-bottom:14px}
+.reasons.sky .n{font-family:"Roboto Serif",Georgia,serif;font-size:80px;font-weight:400;width:46px;flex:0 0 46px;background:linear-gradient(180deg,#f3d79b 0%,#c9984f 55%,#8f6a33 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.reasons.sky .t{font-family:"Roboto Serif",Georgia,serif;font-size:29px;font-weight:400;letter-spacing:0;line-height:1.1}
+.reasons.sky p{font-family:"Roboto Serif",Georgia,serif;font-style:italic;font-weight:300;font-size:19.5px;line-height:1.39;opacity:.8}
+/* Слайд 2 «Партнёры» — размеры сняты с макета 2000×1125 и приведены к 1920×1080 */
+.partners h2{position:absolute;left:80px;top:78px;margin:0;font-family:var(--f-disp);font-weight:700;font-size:60px;line-height:1;letter-spacing:.04em;text-transform:uppercase}
+.partners .sub{position:absolute;left:80px;top:156px;font-family:var(--f-disp);font-weight:400;font-size:29px;line-height:1.25;letter-spacing:.02em}
+.partners.sky h2{font-family:"Roboto Serif",Georgia,serif;font-weight:500;text-transform:none;letter-spacing:0}
+.partners.sky .sub{font-family:"Roboto Serif",Georgia,serif;font-weight:400;letter-spacing:0}
+.ptable{position:absolute;left:82px;top:265px;width:1756px;height:733px;border-radius:26px;overflow:hidden;
+  background:linear-gradient(180deg,#20424F 0%,#132f38 100%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45),inset 1.5px 0 0 rgba(255,255,255,.12),inset -1.5px 0 0 rgba(255,255,255,.12),0 10px 30px rgba(0,0,0,.25);
+  display:grid;grid-template-columns:428px 450px 449px 429px;grid-template-rows:119px 1fr}
+.ptable .lg{background:linear-gradient(180deg,#071f28,#0c2832);display:flex;align-items:center;justify-content:center;position:relative}
+.ptable .lg+.lg::before,.ptable .col+.col::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:1.5px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0))}
+.ptable .col{position:relative;display:flex;flex-direction:column;align-items:center;gap:44px;padding-top:66px;text-align:center}
+.ptable .col+.col::before{top:40px;bottom:40px}
+.st b{display:block;font-size:50px;font-weight:400;line-height:1;letter-spacing:.01em}
+.st span{display:block;font-size:21px;line-height:1.45;margin-top:6px;opacity:.85}
+.logoph{border:2px dashed rgba(255,255,255,.35);border-radius:10px;padding:10px 18px;font-size:20px;opacity:.75;letter-spacing:.04em}
+.ptable .lg img{display:block;max-width:100%}
+.st .forbes{display:block;margin:0 auto 4px;width:146px;height:auto}
+.st .logoph{display:inline-block;font-family:Georgia,serif;font-size:34px;font-weight:700;padding:4px 14px}
+.sky .cover-h,.sky h2{font-family:"Roboto Serif",Georgia,serif;text-transform:none;letter-spacing:0;font-weight:500}
+.share{font-size:22px;font-weight:600;margin-left:10px;opacity:.95}
+.left{position:absolute;left:0;top:0;bottom:0;width:790px;background:#fff;border-radius:0 40px 40px 0;color:#16343b;display:flex;flex-direction:column;align-items:center;padding:80px 76px 80px;box-sizing:border-box}
+.cat{border-radius:50px;height:47px;padding:0 40px;display:flex;align-items:center;font-family:var(--f-disp);font-size:25px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff}
+.specs{margin-top:20px;font-size:21px;color:#5b6b6f;display:flex;gap:20px}
+.specs sup,.rc sup{font-size:.62em;vertical-align:.5em;line-height:0}
+.specs b{color:#16343b;font-weight:500;font-size:24px}
+.plan.has{border:0;padding:0;position:relative}
+/* планировка вписывается в свободное место и занимает 80% его высоты/ширины — не заезжает на соседние блоки */
+.plan img{position:absolute;inset:0;margin:auto;max-width:80%;max-height:80%;width:auto;height:auto;object-fit:contain;display:block}
+.plan .pimg{position:absolute;inset:10%;background:center/contain no-repeat}
+.calcslide.gl .plan .pimg{inset:2% 4%}
+.plan{flex:1;min-height:0;width:100%;margin:36px 0;border:3px dashed #c7d3d5;border-radius:18px;display:grid;place-items:center;text-align:center;font-size:26px;color:#7d8d90;padding:20px;box-sizing:border-box}
+.plan small{display:block;font-size:20px;margin-top:8px}
+.inst{width:100%;color:#fff}
+.terms{background:var(--card-body);color:#fff;border-radius:50px;height:48px;padding:0 40px;display:flex;align-items:center;gap:20px}
+.terms span{font-size:20px;font-weight:500;letter-spacing:.04em;opacity:.8}
+.terms b{font-family:var(--f-disp);font-size:25px;font-weight:700;letter-spacing:.04em}
+
+.cards{position:absolute;left:830px;width:1010px;top:144px;display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:493px 493px;gap:24px;flex-shrink:0}
+.card{display:flex;flex-direction:column;border-radius:20px;box-shadow:0 5px 10px rgba(0,0,0,.3);flex-shrink:0;height:134px;overflow:hidden}
+.card .h{height:44px;flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;letter-spacing:.04em;background:var(--card-head);border-radius:20px 20px 0 0;padding:0 16px;text-align:center}
+.card .h span{opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .b{flex:1;display:flex;align-items:center;justify-content:center;font-size:50px;font-weight:400;background:var(--card-body);font-variant-numeric:tabular-nums;white-space:nowrap}
+.card .b.split>div{flex:1;text-align:center}
+.card .b.split>i{width:2px;height:46px;background:rgba(255,255,255,.3)}
+.card.gold .h{background:var(--gold)}
+.card.gold .h span{opacity:1}
+.card.gold .b{background:var(--gold-shade),var(--gold)}
+.card.days{height:163px}
+.days .b>div,.inst .b>div{display:flex;flex-direction:column;align-items:center;line-height:1}
+.days .b>div{text-align:center}
+.big{font-size:50px}
+.sm{font-size:18px;margin-top:6px;line-height:1.2;opacity:.9;white-space:normal}
+.inst .card{height:150px}
+.calcbadge{height:47px;display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
+/* ---------- выгрузка PDF ---------- */
+#printRoot{display:none}
+#renderHost{position:fixed;left:-12000px;top:0;width:1920px;height:1080px;overflow:hidden;pointer-events:none}
+#renderHost .slide,#printRoot .slide{transform:none!important}
+#renderHost .plan:not(.has),#printRoot .plan:not(.has){visibility:hidden}
+#renderHost .cover .ph,#printRoot .cover .ph{display:none}
+/* html2canvas не умеет текст с градиентной заливкой — даём сплошной цвет */
+.canvas .edge,.canvas .rc,.canvas .ptable{box-shadow:none!important;box-sizing:border-box;border:1.5px solid rgba(255,255,255,.14);border-top-color:rgba(255,255,255,.4);border-bottom-color:rgba(255,255,255,0)}
+.canvas .rc .n{background:none!important;-webkit-text-fill-color:currentColor;color:#d4dcdf}
+.canvas .reasons.sky .rc .n{color:#d9b06a}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{margin:0!important;padding:0!important;background:#fff!important}
+  :root{padding:0!important}
+  body.printing .app{display:none!important}
+  body.printing #printRoot{display:block}
+  #printRoot .page{position:relative;width:1920px;height:1080px;overflow:hidden;break-after:page;page-break-after:always}
+  #printRoot .page:last-child{break-after:auto;page-break-after:auto}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<?!= assets ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head><body>
+
+<div class="app">
+  <header class="top">
+    <h1>АвтоКП</h1>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. Цены — из актуального прайса. <span style="opacity:.55">· версия 2026-11-16 19-00 · GitHub</span></p>
+  </header>
+
+  <div class="side">
+  <form id="f" autocomplete="off">
+    <fieldset id="codeBox" hidden>
+      <legend>Вход</legend>
+      <label class="full">Код доступа <input id="acode" autocomplete="off"></label>
+      <button type="button" id="codeBtn" class="btn primary full">Войти</button>
+      <p class="note" id="codeNote" hidden>Код не подошёл. Уточните его у маркетинга.</p>
+    </fieldset>
+    <fieldset id="mainBox">
+      <legend>КП</legend>
+      <label class="full mgrbox">Ваше имя — без него PDF не скачать <input id="mgr" placeholder="Имя и фамилия" autocomplete="name"></label>
+      <div class="seg full" role="group" aria-label="Проект">
+        <button type="button" data-k="proj" data-v="wgbg" aria-pressed="true">WGBG</button>
+        <button type="button" data-k="proj" data-v="gl" aria-pressed="false">Grand Life</button>
+      </div>
+      <div class="seg full" role="group" aria-label="Язык">
+        <button type="button" data-k="lang" data-v="ru" aria-pressed="true">Русский</button>
+        <button type="button" data-k="lang" data-v="en" aria-pressed="false">English</button>
+      </div>
+      <div class="seg full" role="group" aria-label="Тип КП" id="modeSeg">
+        <button type="button" data-k="mode" data-v="one" aria-pressed="true">Один юнит</button>
+        <button type="button" data-k="mode" data-v="multi" aria-pressed="false">Сборное КП</button>
+      </div>
+      <div id="multiBox" class="full mbox" hidden>
+        <ul class="kplist" id="kpList"></ul>
+        <button type="button" id="addUnit" class="btn full">+ Добавить юнит</button>
+        <label class="check full"><input type="checkbox" id="sameTerms" checked> Одинаковые условия оплаты для всех юнитов</label>
+        <p class="hint">Поля ниже меняют выделенный юнит. Новый юнит копирует его условия — выберите другой номер.</p>
+      </div>
+      <label>Объект
+        <select id="obj">
+          <option value="aqua">Aqua</option><option value="fc">Family Club</option>
+          <option value="villas">Villas</option><option value="riviera">Riviera</option><option value="sky">Sky Castle</option><option value="gl" hidden>Grand Life</option>
+        </select></label>
+      <label><span class="lbl">Юнит <span id="unitCount"></span></span>
+        <select id="unit"></select></label>
+      <label class="full">Часть
+        <select id="share"><option value="1000">Целый юнит</option><option value="500">1/2</option><option value="250">1/4</option><option value="125">1/8</option></select></label>
+      <p class="note" id="shareNote" hidden></p>
+      <input type="checkbox" id="showAll" hidden>
+      <p class="hint" id="dataStatus">Загружаю прайс…</p>
+      <button type="button" id="reload" class="btn full" hidden>Загрузить прайс</button>
+      <label class="full">Заголовок обложки
+        <select id="headline">
+          <option value="0">Отельная недвижимость для инвестиций</option>
+          <option value="1">Привилегия гарантированного дохода даже на этапе рассрочки</option>
+          <option value="2">Привилегии повышенного гарантированного дохода</option>
+        </select></label>
+      <label class="check full"><input type="checkbox" id="manual"> Индивидуальный расчёт — все цифры вручную</label>
+    </fieldset>
+
+    <fieldset id="unitBox" hidden>
+      <legend>Цифры юнита</legend>
+      <label>Категория <input id="cat" data-auto></label>
+      <label>Площадь, м² <input id="area" data-auto inputmode="decimal"></label>
+      <label>Номер <input id="room" data-auto></label>
+      <label>Этаж <input id="floor" data-auto inputmode="numeric"></label>
+      <label>Цена текущая, € <input id="price" data-auto inputmode="numeric"></label>
+      <label>На окончание, € <input id="final" data-auto inputmode="numeric"></label>
+      <label>Участок, м² <input id="plot" data-auto inputmode="decimal"></label>
+      <label><span class="lbl" title="Доход от отельного управления в год">Доход упр. в год, €</span> <input id="hotel" data-auto inputmode="numeric"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Условия</legend>
+      <div class="seg full" role="group" aria-label="Оплата">
+        <button type="button" data-k="pay" data-v="inst" aria-pressed="true">Рассрочка</button>
+        <button type="button" data-k="pay" data-v="full" aria-pressed="false">100% оплата</button>
+      </div>
+      <label class="full">Скидка
+        <span class="withseg"><input id="disc" value="0" inputmode="decimal" aria-label="Размер скидки">
+        <span class="seg" role="group" aria-label="Скидка в">
+          <button type="button" data-k="discUnit" data-v="pct" aria-pressed="true">%</button>
+          <button type="button" data-k="discUnit" data-v="eur" aria-pressed="false">€</button>
+        </span></span></label>
+      <label class="full">Условия действуют до <input id="deadline" type="date"></label>
+      <label class="inst-only">Срок, мес <input id="months" value="42" inputmode="numeric"></label>
+      <label class="inst-only">Первый взнос, % <input id="pv" value="30" inputmode="decimal"></label>
+      <label class="full inst-only">Гарантированный доход
+        <select id="gdmode">
+          <option value="std">Стандарт: доход от управления + ГД</option>
+          <option value="boost">ГД на период рассрочки (от ПВ)</option>
+        </select></label>
+      <label class="inst-only std-only">ГД при рассрочке, % <input id="gdinst" value="5" inputmode="decimal"></label>
+      <label class="inst-only boost-only">ГД на период рассрочки, % <input id="gdboost" value="7" inputmode="decimal"></label>
+      <label>ГД после оплаты, % <input id="gdfull" value="10" inputmode="decimal"></label>
+      <label style="grid-column:1">Дни в номере (RCI) <input id="rci" value="60" inputmode="numeric" title="0 или пусто — блок не выводится"></label>
+      <label>Дни ITC <input id="itc" value="7" inputmode="numeric" title="0 или пусто — блок ITC не выводится"></label>
+      <div class="full mbox" id="promoBox">
+        <label class="check"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»: первый взнос сейчас, остаток через срок рассрочки — без ежемесячных платежей</label>
+        <p class="hint">Срок по умолчанию: части — 6 месяцев, целые юниты — 13. Можно поменять в поле «Срок, мес».</p>
+        <label id="promoPvBox" hidden>Вариант акции <select id="promoPv"><option value="50">50% сейчас / 50% позже</option><option value="70">70% сейчас / 30% позже</option></select></label>
+      </div>
+      <p class="hint" id="calcline" hidden></p>
+      <p class="note" id="enNote" hidden></p>
+      <p class="note" id="objNote" hidden>По этому объекту в прайсе нет юнитов. Можно включить «Индивидуальный расчёт» и ввести цифры вручную.</p>
+    </fieldset>
+
+  </form>
+  <div class="dlcard">
+    <fieldset id="dlBox">
+      <legend>Готово</legend>
+      <button type="button" id="pdfBtn" class="btn primary full">Скачать PDF</button>
+      <p class="hint" id="pdfStatus"></p>
+      <button type="button" id="pdfImgBtn" class="linkbtn full">Запасной вариант: PDF через печать (принтер «Сохранить как PDF», колонтитулы выключить)</button>
+      <a id="pdfOpen" class="linkbtn full" hidden target="_blank" rel="noopener">Открыть готовый PDF</a>
+      <button type="button" id="toTop" class="linkbtn full" hidden>↑ Наверх, к настройкам</button>
+    </fieldset>
+  </div>
+  </div>
+
+  <section class="preview" aria-label="Предпросмотр КП">
+    <p class="kpsum" id="kpSum"></p>
+    <div class="sw" data-title="Обложка"><p class="cap"><span class="num"></span><span></span></p><div class="frame"><div class="slide cover" id="s1"></div></div></div>
+    <div class="sw" data-title="Партнёры"><p class="cap"><span class="num"></span><span></span></p><div class="frame"><div class="slide partners" id="s2"></div></div></div>
+    <div class="sw" id="promoWrap" data-title="Условия покупки (акция)" hidden><p class="cap"><span class="num"></span><span></span></p><div class="frame"><div class="slide partners promo" id="sP"></div></div></div>
+    <div id="multiHost"></div>
+    <div class="sw" id="calcWrap" data-title="Расчёт"><p class="cap"><span class="num"></span><span id="goldInfo"></span></p><div class="frame"><div class="slide calcslide" id="s3"></div></div></div>
+    <div class="sw" id="mapWrap" data-title="Юнит на генплане" hidden><p class="cap"><span class="num"></span><span id="mapCap"></span></p><div class="frame"><div class="slide mapslide" id="sMap"></div></div></div>
+    <div class="sw" id="intWrap" data-title="Интерьеры"><p class="cap"><span class="num"></span><span id="intCap"></span></p><div class="frame"><div class="slide interiors" id="s4"></div></div></div>
+    <div class="sw" data-title="8 причин для инвестиций"><p class="cap"><span class="num"></span><span></span></p><div class="frame"><div class="slide reasons" id="s5"></div></div></div>
+  </section>
+</div>
+<div id="printRoot"></div>
+<div id="renderHost" class="canvas" aria-hidden="true"></div>
+
+<script>
+/* Данные юнитов: живьём из «Калькулятора КП 2.0» через коннектор Google Sheets (как у зрителя).
+   Цены — лист «Цены», площадь/категория/статус — src_-прайсы месяца из «Справочника», доход от управления — лист «УТП».
+   Без доступа к коннектору — небольшой встроенный снимок Aqua за 11.2026. */
+const SS="1uTS5SoeUM-oWjZj_t7c5bmR_MZcA2iC1ukgXUaHcKmA";
+const COVERS={};
+/* Связь со сервером Apps Script (Code.gs). Интерфейс тот же, что был у коннекторов в прототипе. */
+let ACODE="";try{ACODE=localStorage.getItem("autokp:code")||""}catch(e){}
+function api1(fn,...args){
+  // страница на GitHub: обычный запрос к /exec (window.API_URL задаёт загрузчик); внутри Google — google.script.run
+  if(window.API_URL&&!(window.google&&google.script&&google.script.run))
+    return fetch(window.API_URL,{method:"POST",body:JSON.stringify({fn,args:[ACODE,...args]})})
+      .then(r=>{if(!r.ok)throw new Error("NetworkError: HTTP "+r.status);return r.json()},e=>{throw new Error("NetworkError: "+e.message)})
+      .then(j=>{if(j.ok)return j.result;const m=String(j.error);throw Object.assign(new Error(m),{code:/ACCESS_DENIED/.test(m)?"access":"tool_error"})});
+  return new Promise((res,rej)=>google.script.run
+    .withSuccessHandler(res)
+    .withFailureHandler(e=>{const m=String(e&&e.message||e);rej(Object.assign(new Error(m),{code:/ACCESS_DENIED/.test(m)?"access":"tool_error"}))})
+    [fn](ACODE,...args));
+}
+/* Если Google занят (много менеджеров разом) — повторяем через 1,5 / 3 / 6 с, а не показываем ошибку */
+const BUSY=/too many|simultaneous|invoked too many|timed out|Превышен|слишком много|try again|NetworkError|сбой сети/i;
+async function api(fn,...args){
+  for(let i=0;;i++){
+    try{return await api1(fn,...args)}
+    catch(e){if(i>=3||e.code==="access"||!BUSY.test(e.message))throw e;await new Promise(r=>setTimeout(r,1500*2**i))}
+  }
+}
+/* Не больше 3 одновременных загрузок картинок с одной страницы */
+let IMG_ACTIVE=0;const IMG_Q=[];
+function imgSlot(){return new Promise(r=>{const go=()=>{IMG_ACTIVE++;r(()=>{IMG_ACTIVE--;const n=IMG_Q.shift();if(n)n()})};IMG_ACTIVE<3?go():IMG_Q.push(go)})}
+/* Запросы, сделанные в один момент, уходят на сервер одним вызовом (весь прайс — одно обращение) */
+function batcher(many,one){
+  let q=[],t=null;
+  const flush=async()=>{const b=q;q=[];t=null;
+    try{const out=await api(many,b.map(x=>x.arg));b.forEach((x,i)=>out[i]&&out[i].error?x.rej(Object.assign(new Error(out[i].error),{code:"tool_error"})):x.res(out[i]))}
+    catch(e){ // старый Code.gs без пакетных функций — по одному, как раньше
+      if(/not found|не найден|Script function|unknown function/i.test(e.message))b.forEach(x=>api(one,x.arg).then(x.res,x.rej));else b.forEach(x=>x.rej(e))}};
+  return arg=>new Promise((res,rej)=>{q.push({arg,res,rej});if(!t)t=setTimeout(flush,0)});
+}
+const getRangeB=batcher("getRanges","getRange"),listFolderB=batcher("listFolders","listFolder");
+const GAS={callTool:async(server,tool,a)=>{
+  if(tool==="get_values")return{payload:{values:await getRangeB(a.range)}};
+  if(tool==="search_files")return{payload:{files:await listFolderB((String(a.query).match(/'([^']+)'/)||[])[1])}};
+  if(tool==="download_file_content"){const done=await imgSlot();try{return{payload:{content:await api("getFileBase64",a.fileId)}}}finally{done()}}
+  throw Object.assign(new Error("unknown tool"),{code:"tool_error"});
+}};
+const PLAN_FOLDERS={};
+const PLAN_FILES={},PLAN_IMG={},PLAN_STATE={};
+let PLAN_MCP=null;
+const INT_FOLDERS={};
+/* Карты с выделенным юнитом (Villas, Riviera): папку подключу, когда будут картинки; файл ищется по номеру юнита в имени */
+const MAP_FOLDERS={};
+const MAP_FILES={},MAP_IMG={},MAP_STATE={};
+const INT_FILES={},INT_IMG={},INT_STATE={};
+const SNAP={aqua:[],fc:[],villas:[],riviera:[],sky:[],gl:[]};
+let UNITS=SNAP,DATA_SRC="snapshot",DIR={};
+const OBJ={aqua:"AQUA",fc:"FAMILY CLUB",villas:"VILLAS",riviera:"RIVIERA",sky:"SKY CASTLE",gl:"GRAND LIFE"};
+const T={
+ ru:{kicker:"Коммерческое предложение",heads:["Отельная недвижимость для инвестиций","Привилегия гарантированного дохода даже на этапе рассрочки","Привилегии повышенного гарантированного дохода"],
+  area:"площадь:",room:"номер:",floor:"этаж:",villa:"вилла:",plot:"участок:",m2:"м<sup>2</sup>",
+  special:"Стоимость по спецпредложению",benefit:p=>`Ваша выгода${p?" "+p:""}`,current:"Стоимость текущая",currentShare:(x,o)=>`Стоимость текущая ${x} части ${o==="villas"?"виллы":o==="riviera"?"таунхауса":"номера"}`,growth:"Рост стоимости в год",growthV:"от 30%",final:"Стоимость по окончании строительства",
+  resale:"Доход от перепродажи",hotel:"Доход от отельного управления в год",gdHotel:"Гарантированный доход от отельного управления в год",gdYear:"Гарантированный доход в год",
+  gdDuring:"Гарантированный доход на период рассрочки",gdAfter:"Гарантированный доход после полной выплаты",days:"Дни отдыха",
+  d60:"60 дней",d60s:"Отдых в отельном номере<br>(могут быть обменены по программе RCI)",itc:n=>`${n} ${plural(n,"день","дня","дней")}`,itcs:"Отдых по программе ITC",
+  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,pv:p=>`Первый взнос — ${p}%`,monthly:"Ежемесячный платёж",
+  pmTitle:"Условия покупки",pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
+  pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
+  pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
+  gdDuringY:"Гарантированный доход в год на период рассрочки",gdAfterY:"Гарантированный доход в год после рассрочки",
+  terms:"Условия покупки:",full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,
+  plan:"Планировка",planS:"подтянется с Диска",cover:"Фото обложки — подтянется с Диска"},
+ en:{kicker:"Commercial offer",heads:["Hotel real estate\nfor investment","The privilege of guaranteed income during the installment payment period","The privileges of increased guaranteed income"],
+  area:"square footage:",room:"room:",floor:"floor:",villa:"villa:",plot:"land plot:",m2:"m<sup>2</sup>",
+  special:"Special offer price",benefit:p=>`Your benefit${p?" "+p:""}`,current:"Current cost",currentShare:(x,o)=>`Current cost of ${x} of the ${o==="villas"?"villa":o==="riviera"?"townhouse":"room"}`,growth:"Annual cost increase",growthV:"from 30%",final:"Cost at the end of construction",
+  resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income annual",
+  gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
+  d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",itc:n=>`${n} days`,itcs:"ITC program vacation",
+  inst:m=>`Installment ${m} months`,pv:p=>`First installment ${p}%`,monthly:"Monthly payment",
+  pmTitle:"Terms of purchase",pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
+  pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
+  pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
+  gdDuringY:"Guaranteed annual income during the installment period",gdAfterY:"Guaranteed annual income after the installment period",
+  terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,
+  plan:"Floor plan",planS:"will be pulled from Drive",cover:"Cover photo — will be pulled from Drive"}
+};
+const st={lang:"ru",pay:"inst",font:"o",discUnit:"pct",mode:"one",proj:"wgbg"};
+const $=id=>document.getElementById(id);
+function plural(n,a,b,c){n=Math.abs(n)%100;const d=n%10;if(n>10&&n<20)return c;if(d>1&&d<5)return b;if(d==1)return a;return c}
+const num=id=>{const v=parseFloat(String($(id).value).replace(/[\s€]/g,"").replace(",","."));return isFinite(v)?v:0};
+const eur=v=>"€"+Math.round(v).toLocaleString("ru-RU").replace(/ /g," ");
+const pct=(v,l)=>{const r=Math.round(v*10)/10;let s=Number.isInteger(r)?String(r):r.toFixed(1);if(l==="ru")s=s.replace(".",",");return s+"%"};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtDate=s=>{if(!s)return"";const[y,m,d]=s.split("-");return`${d}.${m}.${y}`};
+
+try{document.documentElement.style.setProperty("--pat",`url("${BG_JPEG}")`)}catch(e){}
+
+/* Золотые плашки срока: «флажок» на обложке (вырезы с обеих сторон) и скруглённая полоса на расчёте.
+   Заливка — золотой градиент из Figma, обводка — тонкая белая с градиентом прозрачности. */
+/* Многоугольник со скруглёнными углами: r — радиус для каждой вершины */
+function roundPoly(pts,r){
+  const n=pts.length,P=k=>pts[(k+n)%n];let d="";
+  for(let k=0;k<n;k++){
+    const [x,y]=P(k),[px,py]=P(k-1),[nx,ny]=P(k+1);
+    const l1=Math.hypot(px-x,py-y),l2=Math.hypot(nx-x,ny-y),rr=Math.min(r[k],l1/2,l2/2);
+    const a=[x+(px-x)/l1*rr,y+(py-y)/l1*rr],b=[x+(nx-x)/l2*rr,y+(ny-y)/l2*rr];
+    d+=(k?"L":"M")+a[0].toFixed(2)+" "+a[1].toFixed(2)+"Q"+x+" "+y+" "+b[0].toFixed(2)+" "+b[1].toFixed(2);
+  }
+  return d+"Z";
+}
+function goldShape(kind,w,h){
+  const id=kind+Math.random().toString(36).slice(2,7),sw=1.5,i=sw/2;
+  const shape=kind==="flag"
+    ?`<path d="${roundPoly([[i,i],[w-i,i],[w-15,h/2],[w-i,h-i],[i,h-i],[15,h/2]],[8,8,4,8,8,4])}"`
+    :`<rect x="${i}" y="${i}" width="${w-sw}" height="${h-sw}" rx="20"`;
+  return`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs>
+   <linearGradient id="g${id}" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#D3AF7D"/><stop offset=".25" stop-color="#926F41"/><stop offset=".5" stop-color="#B1864B"/><stop offset=".75" stop-color="#D3AF7D"/><stop offset="1" stop-color="#B1864B"/></linearGradient>
+   <linearGradient id="d${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+   <linearGradient id="s${id}" x1="0" x2="${kind==="flag"?0:1}" y1="0" y2="${kind==="flag"?1:0}"><stop offset="0" stop-color="#fff" stop-opacity="${kind==="flag"?.75:.15}"/><stop offset="1" stop-color="#fff" stop-opacity="${kind==="flag"?.15:.6}"/></linearGradient></defs>
+   ${shape} fill="url(#g${id})"/>${kind==="bar"?shape+` fill="url(#d${id})"/>`:""}${shape} fill="none" stroke="url(#s${id})" stroke-width="${sw}"/></svg>`;
+}
+/* Тексты слайда 2 — с макетов «В партнёрстве с лидерами» (RU/EN) */
+const PARTNERS={
+ ru:{title:"В партнерстве с лидерами",sub:"Единственный в Грузии All Inclusive<br>и Ultra All Inclusive luxury отельный комплекс 5★.",
+  cols:[[["9300","отелей по всему миру"],["95","стран присутствия"],["45","лет на рынке"],["120 млн","постоянных клиентов"]],
+   [["@Forbes","топ-10 брендов<br>по версии Forbes Грузия"],["10%","гарантированная доходность,<br>уже выплачиваем ежегодно<br>всем владельцам"],["10","лет на рынке<br>элитной недвижимости"]],
+   [["1500","отелей под управлением"],["65","лет на рынке"],["25","брендов под управлением"]],
+   [["3600+","курортов"],["110","стран"],["50","лет на рынке"]]]},
+ en:{title:"In partnership with leaders",sub:"The Only 5★ All-Inclusive &amp; Ultra All-Inclusive<br>Luxury Hotel Complex in Georgia.",
+  cols:[[["9300","hotels worldwide"],["95","countries"],["45","years on the market"],["120M","loyal guests"]],
+   [["@Forbes","Forbes Georgia<br>Top 10 brands"],["10%","guaranteed annual income<br>already being paid<br>out annually to all owners"],["10","years on the elite<br>real estate market"]],
+   [["1500","hotels under management"],["65","years on the market"],["25","brands under management"]],
+   [["3600+","resorts"],["110","countries"],["50","years on the market"]]]}
+};
+const PARTNER_LOGOS=[["wyndham","Wyndham Hotels & Resorts"],["ev","European Village"],["aimbridge","Aimbridge"],["rci","RCI"]];
+
+/* Grand Life: слайды «Партнёры» и «Преимущества инвестиции» — тексты с КП Grand Life 204B (RU/EN) */
+const PARTNERS_GL={
+ ru:{title:"В партнерстве с лидерами",sub:"Единственный пятизвездочный city hotel<br>в Батуми в сегменте luxury.",
+  cols:[[["4000","отелей по всему миру"],["100","стран присутствия"],["80","лет на рынке"],["70 млн","программа лояльности"]],PARTNERS.ru.cols[1],PARTNERS.ru.cols[2],PARTNERS.ru.cols[3]]},
+ en:{title:"In partnership with leaders",sub:"The only 5-star city hotel<br>in Batumi in the luxury segment.",
+  cols:[[["4000","hotels worldwide"],["100","countries"],["80","years on the market"],["70M","loyalty program"]],PARTNERS.en.cols[1],PARTNERS.en.cols[2],PARTNERS.en.cols[3]]}
+};
+const PARTNER_LOGOS_GL=[["wh","World Hotels"],["ev","European Village"],["aimbridge","Aimbridge"],["rci","RCI"]];
+const REASONS_GL={
+ ru:{title:"Преимущества инвестиции",items:[
+  ["Гарантированный<br>доход","Фиксируем доход в договоре и регистрируем обязательства в Министерстве юстиции."],
+  ["Высокая<br>ликвидность","Недвижимость от международных сетей всегда востребована и сохраняет ценность."],
+  ["Luxury<br>сегмент","Растущий спрос на люксовые отели среди состоятельных туристов и бизнес-гостей."],
+  ["Беззаботное<br>владение","Все операционные процессы берет на себя профессиональная управляющая компания."],
+  ["Программа<br>привилегий","Владельцы номеров получают эксклюзивные условия для отдыха по всему миру."],
+  ["Рост<br>капитала","Со временем стоимость отельной недвижимости увеличивается, принося дополнительную выгоду."]]},
+ en:{title:"Benefits of investing",items:[
+  ["Guaranteed<br>income","We fix the income in the contract and register the liabilities with the Ministry of Justice."],
+  ["High<br>liquidity","Real estate from international chains is always in demand and retains its value."],
+  ["Luxury<br>segment","Growing demand for luxury hotels among affluent tourists and business guests."],
+  ["Carefree<br>ownership","All operational processes are handled by a professional management company."],
+  ["Privilege<br>program","Room owners receive exclusive conditions for vacations around the world."],
+  ["Capital<br>growth","Over time, the value of hotel real estate increases, bringing additional benefits."]]}
+};
+function partnersSlide(){
+  const gl=st.proj==="gl";
+  const P=(gl?PARTNERS_GL:PARTNERS)[st.lang],sky=!gl&&allSky();
+  const title=sky?"Wyndham Grand Batumi Gonio":P.title;
+  $("s2").classList.toggle("sky",sky);$("s2").classList.toggle("gl",gl);
+  $("s2").innerHTML=`${logo(kpObj())}<h2>${title}</h2><div class="sub">${P.sub}</div>
+   <div class="ptable">${(gl?PARTNER_LOGOS_GL:PARTNER_LOGOS).map(([k,n])=>`<div class="lg"><img src="${LOGO[k]}" alt="${n}" width="410" height="100"></div>`).join("")}
+   ${P.cols.map(c=>`<div class="col">${c.map(([n,t])=>`<div class="st">${n==="@Forbes"?`<img class="forbes" src="${LOGO.forbes}" alt="Forbes Georgia" width="140" height="35">`:`<b>${n}</b>`}<span>${t}</span></div>`).join("")}</div>`).join("")}</div>`;
+}
+/* Тексты слайда 5 — с макетов «8 причин для инвестиций» (RU/EN) */
+const REASONS={
+ ru:{title:"8 причин для инвестиций",items:[
+  ["Продуманная<br>концепция","Первый и пока единственный в Грузии 5★ All Inclusive luxury resort. Проект создан для круглогодичного семейного отдыха — ниша с высоким спросом, но с дефицитом предложений в стране. Рассчитаны все факторы для привлечения гостей: кашрут для израильтян, халяль для арабов, инфраструктура для семей с детьми, клиника для зимнего оздоровления и многое другое."],
+  ["Масштабная<br>инфраструктура","Самая большая инфраструктура в Грузии: более 100 обьектов на площади 27 115 м<sup>2</sup>. 12 ресторанов и баров, 7 бассейнов, 3 SPA, 2 фитнес-центра, медицинская клиника, 7 детских площадок, переговорные комнаты и многое другое обеспечивают круглогодичную заполняемость."],
+  ["Высокая<br>доходность","Доходность обеспечивается профессиональным управлением, высокой загрузкой и отсутствием конкурентов в сегменте Luxury &amp; All Inclusive. Гарантированный доход по договору и возможность обратного выкупа с регистрацией обязательств в Министерстве юстиции защищают ваши вложения."],
+  ["Отельные<br>технологии работы","Отель функционирует как единый механизм, где сервисы, инфраструктура и команда действуют согласованно. Такой подход, выстроенный под требования международных туроператоров, обеспечивает предсказуемость процессов и максимальную загрузку."],
+  ["Профессиональное<br>управление","Управление осуществляет Aimbridge Hospitality — мировой лидер с 65-летней экспертизой и портфелем из 1500+ отелей. Компания отвечает за стандарты, доходность и прозрачную отчетность, а глобальный маркетинг поддерживает высокую загрузку."],
+  ["Глобальная<br>аналитика","Система аналитики Wyndham Hotels &amp; Resorts основана на 45 годах опыта и 9300 отелях в 95 странах. Это позволяет точно прогнозировать загрузку и сезонность, а также формировать эффективный маркетинг."],
+  ["Мощная<br>клиентская база","Программа лояльности Wyndham Rewards обьединяет 120 млн постоянных гостей сети и обеспечивает стабильный поток туристов без дополнительных затрат на привлечение."],
+  ["Узнаваемость<br>бренда","Wyndham Hotels &amp; Resorts — крупнейшая гостиничная сеть мира. Wyndham Grand — самый престижный бренд в линейке — всего 95 отелей из 9300 во всем мире. Узнаваемость бренда усиливает доверие покупателей и повышает инвестиционную ценность."]]},
+ en:{title:"8 Reasons to invest",items:[
+  ["Well-thought-out<br>concept","The first and currently only 5★ All Inclusive luxury resort in Georgia. The project is created for year-round family vacations – a high-demand niche with a shortage of supply in the country. Every factor for attracting guests has been calculated: Kosher options for Israelis, Halal for Arabs, infrastructure for families with children, a clinic for winter wellness, and much more."],
+  ["Extensive<br>infrastructure","The largest infrastructure in Georgia: over 100 amenities across an area of 27,115 m<sup>2</sup>. 12 restaurants and bars, 7 swimming pools, 3 spas, 2 fitness centers, medical clinic, 7 children’s playgrounds, meeting rooms, and much more ensure year-round occupancy."],
+  ["High<br>income","Income is ensured by professional management, high occupancy, and a lack of competitors in the Luxury &amp; All-Inclusive segment. Guaranteed income stipulated in the contract and a buyback option with obligations registered at the Ministry of Justice protect your investments."],
+  ["Hotel operational<br>technologies","The hotel functions as a unified mechanism where services, infrastructure, and the team operate in unison. This approach, built to meet the requirements of international tour operators, ensures process predictability and maximum occupancy."],
+  ["Professional<br>management","Management is carried out by Aimbridge Hospitality – a world leader with 65 years of expertise and a portfolio of 1,500+ hotels. The company is responsible for standards, profitability, and transparent reporting, while global marketing maintains high occupancy."],
+  ["Global<br>analytics","The Wyndham Hotels &amp; Resorts analytics system is based on 45 years of experience and 9,300 hotels in 95 countries. This allows for accurate forecasting of occupancy and seasonality, as well as the building of effective marketing strategies."],
+  ["Powerful<br>customer base","The Wyndham Rewards loyalty program unites 120 million loyal network guests and ensures a stable stream of tourists without additional acquisition costs."],
+  ["Brand<br>recognition","Wyndham Hotels &amp; Resorts is the world’s largest hotel chain. Wyndham Grand is the most prestigious brand in the lineup – only 95 hotels out of 9,300 worldwide. Brand recognition strengthens buyer confidence and increases investment value."]]}
+};
+const REASONS_SKY={
+ ru:{title:"8 причин для инвестиций",items:[
+  ["Новый символ<br>Грузии","Sky Castle создается как знаковое туристическое место и новая точка притяжения Грузии. Историческая легенда, архитектура орденского замка и авторские пространства делают сам отель причиной для поездки. Это снижает конкуренцию, поддерживает высокий спрос и позволяет работать в высоком ценовом сегменте."],
+  ["Продуманная<br>концепция","Sky Castle не имеет аналогов в Грузии по концепции и позиционированию. Уникальность проекта усиливает его расположение в составе первого и пока единственного в стране 5★ All Inclusive luxury resort. Семейная инфраструктура, кашрут и халяль, возможности для зимнего оздоровления и другие факторы обеспечивают круглогодичный спрос."],
+  ["Масштабная<br>инфраструктура","Самая большая инфраструктура в Грузии: более 100 объектов на площади 27 115 м<sup>2</sup>. 12 ресторанов и баров, 7 бассейнов, 3 SPA, 2 фитнес-центра, медицинская клиника, 7 детских площадок, переговорные комнаты и многое другое обеспечивают круглогодичную заполняемость."],
+  ["Высокая<br>доходность","Доходность обеспечивается профессиональным управлением, высокой загрузкой и отсутствием конкурентов в сегменте Luxury &amp; All Inclusive. Гарантированный доход по договору и возможность обратного выкупа с регистрацией обязательств в Министерстве юстиции защищают ваши вложения."],
+  ["Отельные технологии<br>работы","Отель функционирует как единый механизм, где сервисы, инфраструктура и команда действуют согласованно. Такой подход, выстроенный под требования международных туроператоров, обеспечивает предсказуемость процессов и максимальную загрузку."],
+  ["Профессиональное<br>управление","Управление осуществляет Aimbridge Hospitality — мировой лидер с 65-летней экспертизой и портфелем из 1500+ отелей. Компания отвечает за стандарты, доходность и прозрачную отчетность, а глобальный маркетинг поддерживает высокую загрузку."],
+  ["Глобальная система<br>продаж","Система Wyndham Hotels &amp; Resorts опирается на 45 лет опыта и 9300 отелей в 95 странах, позволяя прогнозировать загрузку, сезонность и эффективно управлять маркетингом. Программа лояльности Wyndham Rewards объединяет 120 млн постоянных гостей, обеспечивая стабильный международный поток туристов."],
+  ["Узнаваемость<br>бренда","Wyndham Hotels &amp; Resorts — крупнейшая гостиничная сеть мира. Wyndham Grand — самый престижный бренд в линейке — всего 95 отелей из 9300 во всем мире. Узнаваемость бренда усиливает доверие покупателей и повышает инвестиционную ценность."]]},
+ en:{title:"8 Reasons to Invest",items:[
+  ["A New Symbol<br>of Georgia","Sky Castle is being developed as an iconic tourist destination and a new attraction in Georgia. The historical legend, the architecture of the monastic castle, and the uniquely designed spaces make the hotel itself a reason to visit. This reduces competition, sustains high demand, and allows the hotel to operate in the high-end price segment."],
+  ["A well-thought-out<br>concept","Sky Castle is unparalleled in Georgia in terms of its concept and positioning. The project’s uniqueness is further enhanced by its location within the country’s first and only 5★ All Inclusive luxury resort. Family-friendly amenities, kosher and halal options, opportunities for winter wellness, and other factors ensure year-round demand."],
+  ["Large-scale<br>infrastructure","The largest infrastructure in Georgia: over 100 amenities across an area of 27,115 m<sup>2</sup>. 12 restaurants and bars, 7 swimming pools, 3 spas, 2 fitness centers, medical clinic, 7 children's playgrounds, meeting rooms, and much more ensure year-round occupancy."],
+  ["High<br>income","Profitability is driven by professional management, high occupancy rates, and a lack of competitors in the luxury &amp; all-inclusive segment. Your investment is protected by a contractually guaranteed income and a buy-back option, with all obligations registered with the Ministry of Justice."],
+  ["Hotel operational<br>systems","The hotel functions as a single, integrated mechanism where services, infrastructure, and staff operate in perfect harmony. This approach, built to meet the standards of international tour operators, ensures process predictability and maximum occupancy."],
+  ["Professional<br>management","Management is provided by Aimbridge Hospitality, a global leader with 65 years of expertise and a portfolio of over 1,500 hotels. The company is responsible for maintaining standards, ensuring profitability, and providing transparent reporting, while its global marketing efforts support high occupancy."],
+  ["Global Sales System","The Wyndham Hotels &amp; Resorts network draws on 45 years of experience and a portfolio of 9,300 hotels in 95 countries, enabling it to forecast occupancy rates and seasonal trends and manage marketing effectively. The Wyndham Rewards loyalty program brings together 120 million frequent guests, ensuring a steady international flow of travelers."],
+  ["Brand recognition","Wyndham Hotels &amp; Resorts is the largest hotel chain in the world. Wyndham Grand is its most prestigious brand, with only 95 hotels out of 9,300+ worldwide. This brand recognition enhances buyer trust and increases the investment value."]]}
+};
+try{document.documentElement.style.setProperty("--sky-bg",'url("'+SKY_BG+'")')}catch(e){}
+function reasonsSlide(){
+  const gl=st.proj==="gl",sky=!gl&&allSky(),R=(gl?REASONS_GL:sky?REASONS_SKY:REASONS)[st.lang];
+  $("s5").classList.toggle("sky",sky);$("s5").classList.toggle("gl",gl);
+  $("s5").closest(".sw").dataset.title=gl?"Преимущества инвестиции":"8 причин для инвестиций";
+  $("s5").innerHTML=`${logo(kpObj())}<h2>${R.title}</h2><div class="rgrid">${R.items.map(([t,p],i)=>`<div class="rc"><div class="hd"><span class="n">${i+1}</span><span class="t">${t}</span></div><p>${p}</p></div>`).join("")}</div>`;
+  fitReasons();
+}
+/* Если текст не влезает в карточку (шрифт-аналог шире оригинала) — уменьшаем шаг за шагом, не меньше 17 px */
+function fitReasons(){
+  $("s5").querySelectorAll(".rc").forEach(c=>{
+    const t=c.querySelector(".t"),p=c.querySelector("p"),sk=$("s5").classList.contains("sky"),g=$("s5").classList.contains("gl");let ts=g?30:sk?29:31,ps=g?20:sk?19.5:21;
+    t.style.fontSize=ts+"px";p.style.fontSize=ps+"px";
+    while(t.scrollWidth>c.clientWidth-40-68&&ts>24){ts-=1;t.style.fontSize=ts+"px"}
+    while(c.scrollHeight>c.clientHeight+1&&ps>17){ps-=.5;p.style.fontSize=ps+"px"}
+  });
+}
+function interiorsSlide(){
+  /* У Sky Castle слайда с интерьерами нет: КП из 4 слайдов */
+  const noInt=$("obj").value==="sky";
+  $("intWrap").hidden=noInt;
+  if(noInt)return;
+  const obj=$("obj").value,cat=esc($("cat").value||"юнита"),en=st.lang==="en";
+  const map=obj==="villas"||obj==="riviera";
+  const cap=$("intCap");
+  /* Интерьеры — одна картинка на весь слайд, файл по категории: «Aqua - Superior Interior», «Aqua - Luxe and Deluxe Interior» */
+  const f=interiorFileFor(obj);
+  $("s4").classList.toggle("full",!!(f&&INT_IMG[f.id]));
+  if(f&&INT_IMG[f.id]){$("s4").innerHTML=`<img class="photo" src="${INT_IMG[f.id]}" alt="">`;cap.textContent=f.title;setSkip("intWrap","");return}
+  let note=en?"will be pulled from Drive":"подтянется с Диска";
+  let loading=false;
+  if(f){ensureInterior(f);loading=!INT_STATE[f.id]||INT_STATE[f.id]==="loading";note=loading?"загружаю с Диска…":INT_STATE[f.id]}
+  else if(INT_FILES[obj])note="в папке нет интерьеров для этой категории";
+  else if(PLAN_MCP&&INT_FOLDERS[obj])loading=true;
+  else note=INT_FOLDERS[obj]?"нет доступа к Диску":"папка с интерьерами не подключена";
+  const cell=i=>`<div class="ph"><div>${en?"Interior":"Интерьер"} ${cat} · ${i}<small>${esc(note)}</small></div></div>`;
+  $("s4").innerHTML=[1,2,3,4].map(cell).join("");
+  cap.textContent="";
+  setSkip("intWrap",loading?"":note);
+}
+function logo(o){if(o===undefined)o=$("obj").value;if(o==="gl")return`<img class="glflag" src="${LOGO.whflag}" alt="WorldHotels Luxury" width="160" height="168">`;return`<div class="logo">${WG_MARK}<div class="wg"><b>WYNDHAM GRAND</b><small>BATUMI GONIO</small></div>${o?`<i></i><div class="obj">${OBJ[o]}</div>`:""}</div>`}
+function card(h,body,opts={}){return`<div class="card${opts.gold?" gold":""}${opts.cls?" "+opts.cls:""}"><div class="h"><span>${h}</span></div><div class="b${body.includes("<i>")?" split":""}">${body}</div></div>`}
+const split=(a,b)=>`<div>${a}</div><i></i><div>${b}</div>`;
+
+const NAME_IN_PRICES={aqua:"Aqua",fc:"Family Club",villas:"Villas",riviera:"Riviera",sky:"Sky Castle",gl:"Grand Life"};
+const LAT2CYR={c:"с",o:"о",e:"е",p:"р",a:"а",x:"х",C:"С",O:"О",E:"Е",P:"Р",A:"А",X:"Х",B:"В",M:"М",H:"Н",K:"К",T:"Т"};
+const normStatus=s=>String(s||"").replace(/[coepaxCOEPAXBMHKT]/g,c=>LAT2CYR[c]).trim().toLowerCase();
+const isFree=s=>normStatus(s).startsWith("свободно");
+const toNum=v=>{const n=parseFloat(String(v??"").replace(/[^\d,.-]/g,"").replace(",","."));return isFinite(n)?n:0};
+const pad2=v=>String(v).padStart(2,"0");
+const natural=(x,y)=>x.id.localeCompare(y.id,"ru",{numeric:true});
+
+/* В src_Villas под основной таблицей лежат ещё служебные блоки (другие статусы, доли).
+   Берём только первую таблицу — до первой пустой строки. */
+function firstBlock(rows){
+  const out=[];let started=false;
+  for(const r of rows){const empty=!r||!r.some(c=>String(c||"").trim());
+    if(empty){if(started)break;else continue}started=true;out.push(r)}
+  return out;
+}
+async function loadLive(){
+  const status=$("dataStatus");
+  let mcp=null;
+  try{mcp=GAS}catch(e){}
+  if(!mcp){status.textContent="Живой прайс недоступен в этом просмотре — показан снимок Aqua за 11.2026.";return}
+  status.hidden=false;status.textContent="Загружаю прайс из «Калькулятора КП 2.0»…";$("reload").hidden=true;
+  const get=r=>mcp.callTool("Google Sheets","get_values",{spreadsheetId:SS,range:r},{cache:{staleTime:300000,gcTime:600000}}).then(x=>(x.payload&&x.payload.values)||[]);
+  try{
+    const mm=String(((await get("'Справочник'!Q2"))[0]||[])[0]||"").match(/(\d{2})\.(\d{4})$/);
+    const month=mm?`${mm[1]}.${mm[2]}`:"11.2026";
+    // все листы — одним обращением к серверу (см. batcher)
+    const [prices,aqua,fc,villas,sky,utp,riv,gl,dir]=await Promise.all([
+      get("'Цены'!A2:BO3000"),get(`'src_Aqua ${month}'!C2:AE1500`),get(`'src_Family_Club ${month}'!C2:AE1500`),
+      get("'src_Villas'!A4:D300"),get("'src_Sky_Castle'!B4:D400"),get("'УТП'!B16:L120"),
+      get("'src_Riviera'!A4:G300"),get(`'src_GL ${month}'!A6:AE800`).catch(()=>[]),get("'Справочник'!B2:H60").catch(()=>[])]);
+    // «Цены»: ключ «Объект|юнит|доля» — дальше либо цена и цена на окончание, либо статус
+    const P={},S={},CNT={},KEY=/^[^|]+\|[^|]+\|\d+$/;
+    prices.forEach(r=>{for(let c=0;c<r.length;c++){const k=String(r[c]||"").trim();if(!KEY.test(k))continue;
+      CNT[c+"#"+k]=(CNT[c+"#"+k]||0)+1;
+      const [o,u,sh]=k.split("|"),id=o+"|"+u,nx=r[c+1];
+      if(/[а-яa-z]/i.test(String(nx||""))&&!/\d{3}/.test(String(nx))){if(!S[id])S[id]=nx;continue}
+      const pr=toNum(nx);if(pr>0){P[id]=P[id]||{};if(!P[id][sh])P[id][sh]={price:pr,final:toNum(r[c+2]),count:0}}}});
+    // Свободные части: сколько строк с ключом доли (берём максимум по столбцам — ключ может повторяться в разных блоках)
+    Object.entries(CNT).forEach(([ck,n])=>{const k=ck.slice(ck.indexOf("#")+1),[o,u,sh]=k.split("|"),id=o+"|"+u;
+      if(P[id]&&P[id][sh])P[id][sh].count=Math.max(P[id][sh].count||0,n)});
+    // Доли: база — самая маленькая доля юнита в прайсе (обычно 1/8); 1/4 = 2 × 1/8, 1/2 = 4 × 1/8.
+    // Доли меньше минимальной не создаются (если в прайсе только 1/4 — у юнита нет 1/8).
+    // Производная доля доступна, только если свободных частей хватает.
+    const M8={"125":1,"250":2,"500":4};
+    Object.values(P).forEach(v=>{
+      const base=["125","250","500"].map(k=>v[k]&&{p:v[k].price/M8[k],f:(v[k].final||0)/M8[k]}).find(Boolean);
+      if(!base)return;
+      const free8=["125","250","500"].reduce((a,k)=>a+(v[k]?(v[k].count||1)*M8[k]:0),0);
+      v.free8=free8;
+      const min8=Math.min(...["125","250","500"].filter(k=>v[k]).map(k=>M8[k]));
+      ["125","250","500"].forEach(k=>{if(!v[k]&&M8[k]>min8&&free8>=M8[k])v[k]={price:Math.round(base.p)*M8[k],final:base.f?Math.round(base.f)*M8[k]:0,count:0,derived:true}});
+    });
+    // «Справочник»: по продукту и доле — ГД, дни RCI и ITC, срок рассрочки, ГД при рассрочке
+    DIR={};(dir||[]).forEach(r=>{const prod=String(r[0]||"").trim(),sh={"100":"1000","50":"500","25":"250","12.5":"125"}[String(parseFloat(String(r[1]||"").replace(",",".")))];
+      if(prod&&sh)DIR[prod.toLowerCase()+"|"+sh]={gd:toNum(r[2]),rci:String(r[3]||"").trim()===""?0:toNum(r[3]),itc:String(r[4]||"").trim()===""?0:toNum(r[4]),months:toNum(r[5]),gdinst:toNum(r[6])}});
+    // «УТП»: доход от управления (K) и гарантированная доходность (L) по объекту и планировке
+    const H={},G={},BYAREA={};
+    const CY2LA={"е":"e","а":"a","о":"o","с":"c","р":"p","х":"x","у":"y","к":"k","м":"m","т":"t","н":"h","в":"b"};
+    const nk=v=>String(v||"").toLowerCase().trim().replace(/\s+/g," ").replace(/[еаосрхукмтнв](?=[a-z]|$)|(?<=[a-z])[еаосрхукмтнв]/g,c=>CY2LA[c]);
+    utp.forEach(r=>{if(!r[0]||!r[1]||!r[9])return;const k=nk(r[0])+"|"+nk(r[1]);
+      H[k]=toNum(r[9]);if(r[10])G[k]=toNum(r[10]);
+      const m=String(r[1]).match(/^([\d,.]+)\s*кв/);if(m)(BYAREA[String(r[0]).toLowerCase()]=BYAREA[String(r[0]).toLowerCase()]||[]).push({area:toNum(m[1]),hotel:toNum(r[9]),gd:toNum(r[10])})});
+    const hotel=(obj,cat)=>H[nk(obj)+"|"+nk(cat)]||"";
+    const gdOf=(obj,cat)=>G[nk(obj)+"|"+nk(cat)]||"";
+    // Villas / Riviera: доход зависит от площади дома — точное совпадение, иначе пропорционально ближайшей планировке
+    const byArea=(obj,area)=>{const L=BYAREA[obj.toLowerCase()]||[];if(!L.length||!area)return{hotel:"",gd:""};
+      const near=L.reduce((a,b)=>Math.abs(b.area-area)<Math.abs(a.area-area)?b:a);
+      return Math.abs(near.area-area)<1?{hotel:near.hotel,gd:near.gd}:{hotel:near.hotel/near.area*area,gd:near.gd,est:true}};
+    const mk=(obj,id,o)=>{const pk=NAME_IN_PRICES[obj]+"|"+id,pp=P[pk]||{},full=pp["1000"]||{};
+      const st=o.status??S[pk]??"";return Object.assign({id,price:full.price||o.price||0,final:full.final||0,shares:pp,status:st,free:isFree(st)},o,{status:st,free:isFree(st)})};
+    const fromSrc=(rows,obj,uName,idOf)=>rows.filter(r=>r[0]).map(r=>mk(obj,idOf(r),{cat:r[5]||"",area:toNum(r[11]),room:String(r[0]),floor:String(r[1]||""),
+        price:(P[NAME_IN_PRICES[obj]+"|"+idOf(r)]||{})["1000"]?.price||toNum(r[15]),hotel:hotel(uName,r[5]),gd:gdOf(uName,r[5]),status:r[19]||""})).filter(u=>u.price>0||Object.keys(u.shares||{}).some(k=>k!=="1000"&&u.shares[k].price>0)).sort(natural);
+    const U={
+      aqua:fromSrc(aqua,"aqua","Aqua",r=>String(r[1])+pad2(r[0])),
+      fc:fromSrc(fc,"fc","Family club",r=>String(r[0])+String(r[2]||"")),
+      villas:firstBlock(villas).filter(r=>/^\d+$/.test(String(r[0]||"").trim())).map(r=>{const id=String(r[0]).trim();
+        const a=toNum(r[2]),h=byArea("Villas",a);
+        return mk("villas",id,{cat:"Villa",area:a,room:id,floor:"",hotel:h.hotel,gd:h.gd,hotelEst:h.est,status:r[1]||""})}).filter(u=>u.price>0||Object.keys(u.shares||{}).some(k=>k!=="1000"&&u.shares[k].price>0)).sort(natural),
+      riviera:riv.filter(r=>/^\d+$/.test(String(r[0]||"").trim())).map(r=>{const id=String(r[0]).trim(),a=toNum(r[3]),h=byArea("Riviera",a);
+        return mk("riviera",id,{cat:"Townhouse",area:a,plot:toNum(r[6]),room:id,floor:"",hotel:h.hotel,gd:h.gd,hotelEst:h.est,status:r[1]||""})}).filter(u=>u.price>0||Object.keys(u.shares||{}).some(k=>k!=="1000"&&u.shares[k].price>0)).sort(natural),
+      sky:sky.filter(r=>/^\d+$/.test(String(r[0]||"").trim())).map(r=>{const id=String(r[0]).trim();
+        return mk("sky",id,{cat:r[1]||"",area:toNum(r[2]),room:id.slice(-2).replace(/^0/,""),floor:id.slice(0,-2),hotel:hotel("Sky Castle",r[1]),gd:gdOf("Sky Castle",r[1])})}).filter(u=>u.price>0||Object.keys(u.shares||{}).some(k=>k!=="1000"&&u.shares[k].price>0)).sort(natural)
+    };
+    if(!U.sky.some(u=>u.status))U.sky.forEach(u=>{u.free=true});
+    // Grand Life: C — номер, D — этаж, E — блок (А/Б), H — тип, N — площадь, Q — цена, V — статус
+    const LAT=v=>String(v||"").trim().toUpperCase().replace(/А/g,"A").replace(/[БВ]/g,"B");
+    U.gl=gl.filter(r=>/^\d+$/.test(String(r[2]||"").trim())).map(r=>{const id=String(r[2]).trim()+LAT(r[4]);
+      return mk("gl",id,{cat:r[7]||"",area:toNum(r[13]),room:String(r[2]).trim(),floor:String(r[3]||""),block:LAT(r[4]),
+        price:(P["Grand Life|"+id]||{})["1000"]?.price||toNum(r[16]),hotel:hotel("Grand Life",r[7]),gd:gdOf("Grand Life",r[7]),status:r[21]||""})})
+      .filter(u=>u.price>0||Object.keys(u.shares||{}).some(k=>k!=="1000"&&u.shares[k].price>0)).sort(natural);
+    // Долевой прайс: юниты, которые продаются долями, есть на листе «Цены» с ключом «Объект|юнит|доля».
+    // Если такого юнита нет в списке объекта (например, целиком он не продаётся), добавляем его отдельно.
+    for(const [obj,name] of Object.entries(NAME_IN_PRICES)){
+      Object.keys(P).filter(k=>k.startsWith(name+"|")&&Object.keys(P[k]).some(sh=>sh!=="1000")).forEach(k=>{
+        const id=k.slice(name.length+1);
+        const gid=obj==="gl"?id.replace(/[A-Z]$/,""):"";
+        if(!U[obj].some(u=>u.id===id))U[obj].push({id,cat:"",area:"",room:gid||id.slice(-2).replace(/^0/,""),floor:gid?gid.slice(0,-2):(id.length>2?id.slice(0,-2):""),block:gid?id.slice(-1):"",price:(P[k]["1000"]||{}).price||0,final:(P[k]["1000"]||{}).final||0,shares:P[k],hotel:"",free:false,status:"только части"});
+      });
+      U[obj].sort(natural);
+    }
+    // Один юнит — одна строка в списке: при повторе берём первую запись
+    for(const obj in U){const seen=new Set();U[obj]=U[obj].filter(u=>!seen.has(u.id)&&seen.add(u.id))}
+    UNITS=U;DATA_SRC="live";
+    const n=Object.values(U).reduce((a,l)=>a+l.filter(u=>u.free).length,0);
+    status.textContent=`Прайс ${month} из «Калькулятора КП 2.0» · свободных юнитов: ${n}.`;status.hidden=true; // показываем только ошибки
+    fillUnits();
+  }catch(e){
+    const msg={needs_reauth:"Переподключи Google Sheets в настройках claude.ai → Connectors.",
+      server_not_connected:"Подключи Google Sheets в настройках claude.ai → Connectors.",
+      not_in_manifest:"Доступ к Google Sheets для этой страницы не разрешён.",
+      approval_required:"Нужно разрешить странице читать Google Sheets.",
+      tool_error:"Таблица ответила ошибкой: "+(e&&e.message||"")}[e&&e.code]||"Не получилось загрузить прайс. Показан снимок Aqua.";
+    status.textContent=msg;$("reload").hidden=false;
+  }
+}
+
+function fillUnits(){fillUnitOptions();applyUnit()}
+function fillUnitOptions(){
+  const all=UNITS[$("obj").value]||[],showAll=$("showAll").checked;
+  const sh=$("share").value;
+  // В долях — только юниты, у которых в долевом прайсе есть выбранная доля; пропорционально не считаем
+  const list=sh!=="1000"?all.filter(u=>u.shares&&u.shares[sh]):(showAll?all:all.filter(u=>u.free)).filter(u=>u.price>0);
+  const prev=$("unit").value;
+  $("unit").innerHTML=list.length?list.map(u=>`<option value="${esc(u.id)}">${esc(u.id)}${u.cat?" · "+esc(u.cat):""}${sh!=="1000"?"":(u.free?"":" · "+esc(u.status||"не свободен"))}</option>`).join(""):`<option value="">— ${sh!=="1000"?"нет юнитов с частью "+SHARE_LBL[sh]:"нет юнитов"} —</option>`;
+  if(list.find(u=>u.id===prev))$("unit").value=prev;else if(list.find(u=>u.id==="1511"))$("unit").value="1511";
+  $("unitCount").textContent=list.length?`${list.length} ${plural(list.length,"юнит","юнита","юнитов")}`:"";
+}
+function syncForm(){
+  $("promoPvBox").hidden=!$("promo").checked;if(["50","70"].includes(String($("pv").value)))$("promoPv").value=String($("pv").value);
+  const list=UNITS[$("obj").value]||[],u=list.find(x=>x.id===$("unit").value);
+  document.querySelectorAll("[data-auto]").forEach(i=>i.readOnly=!($("manual").checked||!u));
+  $("unitBox").hidden=!($("manual").checked||!u);
+  $("final").closest("label").hidden=$("obj").value==="sky";
+  document.querySelectorAll(".inst-only").forEach(e=>e.hidden=st.pay!=="inst");
+}
+const SHARE_LBL={"500":"1/2","250":"1/4","125":"1/8"};
+let shareNote="";
+function applyUnit(){
+  const list=UNITS[$("obj").value]||[],u=list.find(x=>x.id===$("unit").value);
+  const manual=$("manual").checked||!u, sh=$("share").value, frac=+sh/1000;
+  $("objNote").hidden=!!list.length;shareNote="";
+  if(u&&!$("manual").checked){
+    const sp=sh!=="1000"&&u.shares?u.shares[sh]:null;
+    const price=sh==="1000"?u.price:(sp?sp.price:0), fin=sh==="1000"?u.final:(sp?sp.final:0);
+    if(sh!=="1000"&&!sp)shareNote=`В прайсе частей нет ${SHARE_LBL[sh]} для этого юнита.`;
+    $("cat").value=u.cat;$("area").value=u.area||"";$("room").value=u.room;$("floor").value=u.floor;
+    $("price").value=Math.round(price);$("final").value=Math.round(fin);$("hotel").value=u.hotel?Math.round(u.hotel*frac):"";$("plot").value=u.plot||"";
+    if(u.gd)$("gdfull").value=Math.round(u.gd*10)/10;
+    const d=DIR[(($("obj").value==="gl"?"grand life "+(u.block||String(u.id).slice(-1)):NAME_IN_PRICES[$("obj").value])||"").toLowerCase()+"|"+sh];
+    if(d){if(d.gd)$("gdfull").value=d.gd;$("rci").value=d.rci||0;$("itc").value=d.itc||0;if(d.months)$("months").value=d.months;if(d.gdinst)$("gdinst").value=d.gdinst}
+    if($("promo").checked&&$("obj").value!=="gl"){$("months").value=sh==="1000"?13:6;$("pv").value=$("promoPv").value}
+    if(u.hotelEst)shareNote=(shareNote?shareNote+" ":"")+"Доход от управления для этой площади в УТП нет — посчитан пропорционально ближайшей планировке.";
+  }
+  $("shareNote").textContent=shareNote;$("shareNote").hidden=!shareNote;
+  document.querySelectorAll("[data-auto]").forEach(i=>i.readOnly=!manual);
+  $("unitBox").hidden=!manual; // поля с цифрами юнита — только при «Индивидуальном расчёте» (или если юнита в прайсе нет)
+  $("unit").disabled=!list.length;
+  render();
+}
+/* Слайд расчёта одного юнита — по значениям формы (в сборном КП форма на время подменяется юнитом из списка) */
+function calcInto(el){
+  const L=T[st.lang],l=st.lang,obj=$("obj").value;
+  let price=num("price");const fin=num("final"),dv=num("disc");
+  const inst=st.pay==="inst",promo=inst&&$("promo").checked&&obj!=="gl",boost=inst&&($("gdmode").value==="boost"||promo);
+  const pvp=num("pv");
+  let benefit=st.discUnit==="pct"?price*dv/100:dv, eff=price-benefit;
+  // акция: «первый взнос + остаток» на слайдах должны сходиться со стоимостью до евро — при расхождении из-за округления стоимость поднимаем
+  if(promo){const adj=Math.round(eff*pvp/100)+Math.round(eff-eff*pvp/100)-Math.round(eff);if(adj){eff+=adj;if(benefit>0)benefit-=adj;else price+=adj}}
+  const hasDisc=benefit>0,discPct=price?benefit/price*100:0;
+  const months=Math.max(1,num("months")),pv=eff*pvp/100,monthly=(eff-pv)/months;
+  const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
+  // левая панель
+  const isVilla=obj==="villas",isRiv=obj==="riviera",isSky=obj==="sky",cat=$("cat").value||"—",shLbl=SHARE_LBL[$("share").value]||"";
+  const areaTxt=String($("area").value).replace(/[.,]/,l==="ru"?",":".");
+  const sp=[];
+  if(isVilla)sp.push(`${L.villa} <b>${esc($("room").value)}</b>`);
+  if(isRiv)sp.push(`${l==="ru"?"номер:":"number:"} <b>${esc($("room").value)}</b>`);
+  sp.push(`${L.area} <b>${esc(areaTxt)} ${L.m2}</b>`);
+  if((isVilla||isRiv)&&num("plot")>0)sp.push(`${L.plot} <b>${esc(String($("plot").value).replace(/[.,]/,l==="ru"?",":"."))} ${L.m2}</b>`);
+  if(obj==="gl"){const blk=(String($("unit").value).match(/[AB]$/)||[""])[0];sp.length=0;
+    if(blk)sp.push(`${l==="ru"?"блок:":"block:"} <b>${blk}</b>`);
+    sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`);sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.area} <b>${esc(areaTxt)} ${L.m2}</b>`);}
+  else if(!isVilla&&!isRiv){sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`)}
+  const bottom=promo
+   ?`<div class="inst pminst">${card(L.pmTitle,`<div class="pmrow"><b>${pvp}%</b>${pmIcon(pvp)}<b>${100-pvp}%</b><i></i><span>${L.pmNow(pvp)},<br>${L.pmLater(100-pvp,months)}</span></div>`)}</div>`
+   :inst
+   ?`<div class="inst">${card(L.inst(months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${L.monthly}</span>`))}</div>`
+   :`<div class="terms"><span>${L.terms}</span><b>${L.full}</b></div>`;
+
+  // правая колонка: какие карточки и что золотое — решает шаблон
+  const items=[];let gold=0;
+  if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(st.discUnit==="pct"?pct(dv,l):pct(discPct,l)),eur(benefit))}</div>`});gold++}
+  const curH=shLbl?L.currentShare(shLbl,obj):L.current;
+  if(isSky){items.push({h:134,html:`<div class="row">${card(curH,eur(price),{gold:!hasDisc})}${card(L.growth,L.growthV)}</div>`})}
+  else{
+    // нет цены на окончание — карточка «Стоимость текущая» на всю ширину
+    items.push({h:134,html:fin>0?`<div class="row">${card(curH,eur(price),{gold:!hasDisc})}${card(L.final,eur(fin))}</div>`:card(curH,eur(price),{gold:!hasDisc})});
+    // юнит продаётся по финальной цене (доход 0 или меньше) — карточку перепродажи не показываем
+    if(fin>0&&Math.round(resale)>0)items.push({h:134,html:card(L.resale,split(eur(resale),pct(eff?resale/eff*100:0,l)))})}
+  if(!hasDisc)gold++;
+  if(inst&&!boost){
+    items.push({h:134,html:card(L.hotel,split(eur(hotel),pct(price?hotel/price*100:0,l)))});
+    items.push({h:134,html:card(hasDisc?L.gdYear:L.gdHotel,split(eur(eff*num("gdinst")/100),pct(num("gdinst"),l)))});
+  }else if(boost){
+    items.push({h:134,html:card(promo?L.gdDuringY:L.gdDuring,split(eur(pv*num("gdboost")/100),pct(num("gdboost"),l)),{gold:true})});gold++;
+    items.push({h:134,html:card(promo?L.gdAfterY:L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)))});
+  }else{
+    items.push({h:134,html:card(L.gdYear,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)))});
+  }
+  const rciN=Math.round(num("rci")),itcN=Math.round(num("itc"));
+  const rciD=`<span class="big">${L.itc(rciN)}</span><span class="sm">${L.d60s}</span>`,itcD=`<span class="big">${L.itc(itcN)}</span><span class="sm">${L.itcs}</span>`;
+  if(rciN>0||itcN>0)items.push({h:163,html:card(L.days,rciN>0&&itcN>0?split(rciD,itcD):`<div>${rciN>0?rciD:itcD}</div>`,{cls:"days"})});
+  const badgeFits=!!dl&&items.length<=5; // как в макете Aqua 2018: 5 блоков + плашка
+  if(badgeFits){items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1010,47)}<span>${L.untilLine(dl)}</span></div>`});gold++}
+  // одинаковая высота карточек; если не влезает — сжимаем только промежутки (20 → 6 px)
+  const TOP=obj==="gl"?176:140,AVAIL=1030-TOP,sum=items.reduce((a,b)=>a+b.h,0);
+  const gap=Math.max(6,Math.min(obj==="gl"?28:20,(AVAIL-sum)/Math.max(1,items.length-1)));
+  const top=obj==="gl"?TOP:TOP+Math.max(0,(AVAIL-sum-gap*(items.length-1))/2); // Grand Life: карточки от верха, как в макете
+
+  el.innerHTML=`<div class="left"><div class="cat goldfill edge">${shLbl?(l==="ru"?`${shLbl} часть `:`${shLbl} part of `):""}${esc(cat)}</div><div class="specs">${sp.map(s=>`<span>${s}</span>`).join("")}</div>
+   ${planHtml(L,cat)}${bottom}</div>${logo()}
+   <div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>`;
+
+  el.classList.toggle("sky",obj==="sky");el.classList.toggle("gl",obj==="gl");
+  return{gold,badgeFits,dl,m:{obj,price,eff,benefit,hasDisc,fin,resale,hotel,inst,boost,months,pvp,pv,monthly,
+    gdStd:eff*num("gdinst")/100,gdBoost:pv*num("gdboost")/100,gdFull:eff*num("gdfull")/100,itc:num("itc"),rci:num("rci"),promo}};
+}
+function render(){
+  const L=T[st.lang],l=st.lang,obj=$("obj").value;
+  const price=num("price"),fin=num("final"),dv=num("disc");
+  const benefit=st.discUnit==="pct"?price*dv/100:dv, eff=price-benefit, hasDisc=benefit>0;
+  const discPct=price?benefit/price*100:0;
+  const months=Math.max(1,num("months")),pvp=num("pv"),pv=eff*pvp/100,monthly=(eff-pv)/months;
+  const inst=st.pay==="inst",promo=inst&&$("promo").checked&&obj!=="gl",boost=inst&&($("gdmode").value==="boost"||promo);
+  const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
+  document.querySelectorAll(".inst-only").forEach(e=>e.hidden=!inst);
+  $("promoBox").hidden=!inst||st.proj==="gl";
+  document.querySelectorAll(".std-only").forEach(e=>e.hidden=!inst||boost);
+  document.querySelectorAll(".boost-only").forEach(e=>e.hidden=!boost);
+  document.body.classList.toggle("fonts-manrope",st.font==="m");document.body.classList.toggle("fonts-analog",st.font==="a");
+
+  // обложка
+  const multi=st.mode==="multi"&&KP.length,cobj=multi?KP[0].obj:obj,same=!multi||KP.every(k=>k.obj===cobj);
+  document.getElementById("s1").classList.toggle("sky",multi?KP.every(k=>k.obj==="sky"):obj==="sky");
+  const cov=COVERS[cobj];
+  const objs=multi?["aqua","fc","riviera","villas","sky"].filter(o=>KP.some(k=>k.obj===o)):[];
+  $("s1").classList.toggle("mcover",objs.length>1);if(objs.length<2)$("s1").classList.remove("panels","logoR");
+  ["s1","s2","s4","s5"].forEach(id=>$(id).classList.toggle("gl",st.proj==="gl"));
+  if(objs.length>1)multiCover(objs,L,dl);
+  else if(obj==="gl")$("s1").innerHTML=`${cov&&cov.url?`<img class="photo" src="${cov.url}" alt="">`:`<div class="ph"><span>${cov&&cov.msg?esc(cov.msg):L.cover}</span></div>`}<div class="dim"></div><div class="shade"></div>${logo("gl")}
+     <div class="kicker">${l==="ru"?"Коммерческое<br>предложение":"Commercial offer"}</div><h2>${esc(L.heads[+$("headline").value]).replace(/(^|\s)([^\s]{1,3}) /g,"$1$2\u00a0").replace(/\n/g,"<br>")}</h2>
+     ${dl?`<div class="deadline">${goldShape("flag",560,96)}<span>${L.until(dl)}</span></div>`:""}`;
+  else $("s1").innerHTML=`${cov&&cov.url?`<img class="photo" src="${cov.url}" alt="">`:`<div class="ph"><span>${cov&&cov.msg?esc(cov.msg):L.cover}</span></div>`}<div class="shade"></div>${logo(same?cobj:null)}
+   <div class="kicker">${L.kicker}</div><h2>${esc(L.heads[+$("headline").value]).replace(/\n/g,"<br>")}</h2>
+   ${dl?`<div class="deadline">${goldShape("flag",560,96)}<span>${L.until(dl)}</span></div>`:""}`;
+
+  fitCover($("s1"));
+  if(st.mode==="multi")renderMulti(L);
+  else{
+    $("multiHost").innerHTML="";$("calcWrap").hidden=false;
+    const r=calcInto($("s3"));
+    $("goldInfo").textContent=r.dl&&!r.badgeFits?"плашка срока не влезла, осталась на обложке":"";
+    mapInto($("sMap"),$("mapCap"),$("mapWrap"));
+  }
+  partnersSlide();promoSlide();interiorsSlide();if(st.mode==="multi"){$("intWrap").hidden=true;$("mapWrap").hidden=true}reasonsSlide();numberSlides();
+  $("calcline").textContent=(hasDisc?`Скидка ${eur(benefit)} (${pct(discPct,"ru")}) · цена ${eur(eff)}`:`Цена ${eur(eff)}`)+(inst?` · ПВ ${eur(pv)} · платёж ${eur(monthly)}/мес`:"");
+  fit();
+}
+
+/* ---------- Сборное КП: несколько юнитов, суммарный слайд ---------- */
+const ITEM_IDS=["obj","share","unit","manual","cat","area","room","floor","price","final","plot","hotel","disc","months","pv","gdmode","gdinst","gdboost","gdfull","rci","itc","promo"];
+let KP=[],CUR=0;
+const allSky=()=>st.mode==="multi"&&KP.length?KP.every(k=>k.obj==="sky"):$("obj").value==="sky";
+const kpObj=()=>st.mode==="multi"&&KP.length?(KP.every(k=>k.obj===KP[0].obj)?KP[0].obj:null):$("obj").value;
+function snap(){const o={pay:st.pay,discUnit:st.discUnit};ITEM_IDS.forEach(id=>{const e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
+function putSnap(o){
+  st.pay=o.pay;st.discUnit=o.discUnit;
+  ITEM_IDS.forEach(id=>{const e=$(id);if(e.type==="checkbox"){e.checked=!!o[id];return}
+    if(id==="unit"&&o.unit&&![...e.options].some(x=>x.value===o.unit)){const t=document.createElement("option");t.value=o.unit;t.dataset.tmp="1";e.appendChild(t)}
+    e.value=o[id]});
+}
+function dropTmp(){$("unit").querySelectorAll("option[data-tmp]").forEach(x=>x.remove())}
+function withItem(o,fn){const saved=snap();putSnap(o);try{return fn()}finally{dropTmp();putSnap(saved);dropTmp()}}
+function syncSeg(){document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",st[b.dataset.k]===b.dataset.v))}
+function itemLabel(o){
+  const p=Math.round(toNum(o.price)),sh=SHARE_LBL[o.share];
+  return`${NAME_IN_PRICES[o.obj]} ${esc(o.unit||o.room||"—")}${sh?" · "+sh:""} <small>· ${p?eur(p):"нет цены"} · ${o.pay==="inst"?"рассрочка "+esc(o.months)+" мес":"100%"}</small>`;
+}
+function renderList(){
+  $("kpList").innerHTML=KP.map((o,i)=>`<li class="${i===CUR?"on":""}"><button type="button" class="sel" data-a="sel" data-i="${i}">${i+1}. ${itemLabel(o)}</button>
+    <button type="button" class="ic" data-a="up" data-i="${i}" title="Выше" ${i?"":"disabled"}>↑</button>
+    <button type="button" class="ic" data-a="del" data-i="${i}" title="Убрать из КП" ${KP.length>1?"":"disabled"}>✕</button></li>`).join("");
+}
+function selectItem(i){
+  CUR=i;const o=KP[i];
+  $("obj").value=o.obj;$("share").value=o.share;
+  const keep=snap();Object.assign(keep,o);
+  fillUnitOptions();putSnap(keep);dropTmp();
+  if(o.unit&&$("unit").value!==o.unit)putSnap(keep);
+  syncForm();syncSeg();renderList();render();
+}
+function setMode(v){
+  st.mode=v;$("multiBox").hidden=v!=="multi";
+  if(v==="multi"&&!KP.length){KP=[snap()];CUR=0}
+  renderList();render();
+}
+$("addUnit").addEventListener("click",()=>{KP[CUR]=snap();KP.push(snap());CUR=KP.length-1;renderList();render();$("unit").focus()});
+$("kpList").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const i=+b.dataset.i,a=b.dataset.a;
+  KP[CUR]=snap();
+  if(a==="sel")return selectItem(i);
+  if(a==="up"&&i>0){[KP[i-1],KP[i]]=[KP[i],KP[i-1]];if(CUR===i)CUR=i-1;else if(CUR===i-1)CUR=i;renderList();render();return}
+  if(a==="del"&&KP.length>1){KP.splice(i,1);selectItem(Math.min(CUR>i?CUR-1:CUR===i?Math.max(0,i-1):CUR,KP.length-1))}
+});
+const TERM_IDS=["months","pv","gdmode","gdboost","promo"];
+function renderMulti(L){
+  KP[CUR]=snap();
+  if($("sameTerms").checked){const c=KP[CUR];KP.forEach(k=>{k.pay=c.pay;TERM_IDS.forEach(id=>k[id]=c[id])})}
+  renderList();
+  $("calcWrap").hidden=true;
+  const host=$("multiHost");
+  host.innerHTML=KP.map((o,i)=>`<div class="sw" data-title="Расчёт · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide"></div></div></div>`+
+    (o.obj==="villas"||o.obj==="riviera"?`<div class="sw" data-title="Генплан · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||""))}"><p class="cap"><span class="num"></span><span class="mc"></span></p><div class="frame"><div class="slide mapslide"></div></div></div>`:"")).join("")+
+    `<div class="sw" data-title="Итого по КП"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide summary"></div></div></div>`;
+  const ws=[...host.children],Ms=[];let w=0;
+  KP.forEach(o=>{
+    const cw=ws[w++],mw=(o.obj==="villas"||o.obj==="riviera")?ws[w++]:null;
+    withItem(o,()=>{
+      const r=calcInto(cw.querySelector(".slide"));Ms.push(r.m);
+      
+      if(mw)mapInto(mw.querySelector(".slide"),mw.querySelector(".mc"),mw);
+    });
+  });
+  const sw=ws[w],g=summaryInto(sw.querySelector(".slide"),Ms,L);
+  
+}
+/* Итоговый слайд: суммы по всем юнитам. Есть хотя бы один Sky Castle — вместо цены на окончание и перепродажи «Рост стоимости в год: от 30%».
+   Рассрочка разная (срок или ПВ) — карточку рассрочки не выводим. */
+function summaryInto(el,Ms,L){
+  const l=st.lang,S=k=>Ms.reduce((a,m)=>a+(m[k]||0),0),n=Ms.length;
+  const price=S("price"),eff=S("eff"),ben=S("benefit"),fin=S("fin"),hotel=S("hotel"),pv=S("pv"),monthly=S("monthly");
+  const hasDisc=ben>0,anySky=Ms.some(m=>m.obj==="sky"),allFin=Ms.every(m=>m.fin>0);
+  const kinds=new Set(Ms.map(m=>m.inst?(m.boost?"boost":"std"):"full"));
+  const items=[];let gold=0;const P=(a,b)=>pct(b?a/b*100:0,l);
+  if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(P(ben,price)),eur(ben))}</div>`});gold++}
+  const cur=card(L.current,eur(price),{gold:!hasDisc});if(!hasDisc)gold++;
+  if(anySky)items.push({h:134,html:`<div class="row">${cur}${card(L.growth,L.growthV)}</div>`});
+  else if(allFin){
+    items.push({h:134,html:`<div class="row">${cur}${card(L.final,eur(fin))}</div>`});
+    const rs=fin-eff;if(Math.round(rs)>0)items.push({h:134,html:card(L.resale,split(eur(rs),P(rs,eff)))});
+  }else items.push({h:134,html:cur});
+  if(kinds.size===1&&kinds.has("std")){
+    if(hotel>0)items.push({h:134,html:card(L.hotel,split(eur(hotel),P(hotel,price)))});
+    items.push({h:134,html:card(hasDisc?L.gdYear:L.gdHotel,split(eur(S("gdStd")),P(S("gdStd"),eff)))});
+  }else if(kinds.size===1&&kinds.has("boost")){
+    items.push({h:134,html:card(L.gdDuring,split(eur(S("gdBoost")),P(S("gdBoost"),pv)),{gold:true})});gold++;
+    items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)))});
+  }else if(kinds.size===1){
+    items.push({h:134,html:card(L.gdYear,split(eur(S("gdFull")),P(S("gdFull"),eff)))});
+  }else{
+    if(hotel>0)items.push({h:134,html:card(L.hotel,split(eur(hotel),P(hotel,price)))});
+    items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)))});
+  }
+  const rciT=Math.round(S("rci")),itcS=Math.round(S("itc"));
+  const rciS=`<span class="big">${L.itc(rciT)}</span><span class="sm">${L.d60s}</span>`,itcSS=`<span class="big">${L.itc(itcS)}</span><span class="sm">${L.itcs}</span>`;
+  if(rciT>0||itcS>0)items.push({h:163,html:card(L.days,rciT>0&&itcS>0?split(rciS,itcSS):`<div>${rciT>0?rciS:itcSS}</div>`,{cls:"days"})});
+  const sameInst=Ms.every(m=>m.inst&&m.months===Ms[0].months&&m.pvp===Ms[0].pvp);
+  if(sameInst&&Ms.every(m=>m.promo))items.push({h:150,html:card(L.pmTitle,split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(eff-pv)}</span><span class="sm">${L.pmCardRest(100-Ms[0].pvp,Ms[0].months)}</span>`),{cls:"instc"})});
+  else if(sameInst)items.push({h:150,html:card(L.inst(Ms[0].months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${L.monthly}</span>`),{cls:"instc"})});
+  const dl=fmtDate($("deadline").value),badge=!!dl&&items.length<=6;
+  if(badge){items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1756,47)}<span>${L.untilLine(dl)}</span></div>`});gold++}
+  const allGL=Ms.every(m=>m.obj==="gl"); // Grand Life: флажок справа сверху, карточки под ним
+  const TOP=allGL?176:60,AVAIL=1030-TOP,sum=items.reduce((a,b)=>a+b.h,0);
+  const gap=Math.max(6,Math.min(28,(AVAIL-sum)/Math.max(1,items.length-1)));
+  const top=TOP+Math.max(0,(AVAIL-sum-gap*(items.length-1))/2);
+  el.innerHTML=`${allGL?logo("gl"):""}<div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>`;
+  el.classList.toggle("sky",Ms.every(m=>m.obj==="sky"));el.classList.toggle("gl",allGL);
+  return gold;
+}
+
+/* Обложка сборного КП: плитки с фото объектов из КП + блок заголовка */
+function multiCover(objs,L,dl){
+  const W=1920,H=1080,M=10,G=10,cw=(W-2*M-2*G)/3,rh=(H-2*M-G)/2;
+  const cell=(c,r,cs=1,rs=1)=>`left:${M+c*(cw+G)}px;top:${M+r*(rh+G)}px;width:${cs*cw+(cs-1)*G}px;height:${rs*rh+(rs-1)*G}px`;
+  const n=objs.length,head=esc(L.heads[+$("headline").value]);
+  if(n<5){
+    // 2–4 объекта: экран делится поровну, фото встык, один логотип и заголовок поверх, как на обычной обложке
+    const P={2:[[0,0,960,1080],[960,0,960,1080]],3:[[0,0,640,1080],[640,0,640,1080],[1280,0,640,1080]],
+             4:[[0,0,960,540],[960,0,960,540],[0,540,960,540],[960,540,960,540]]}[n];
+    $("s1").classList.add("panels");$("s1").classList.toggle("logoR",n===3);
+    $("s1").innerHTML=objs.map((o,i)=>{const c=COVERS[o],[x,y,w,h]=P[i];
+      return`<div class="pnl" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${c&&c.url?`<div class="bg" style="background-image:url(${c.url})"></div>`:`<div class="ph"><span>${esc(c&&c.msg?c.msg:L.cover)}</span></div>`}</div>`}).join("")+
+      `<div class="shade"></div>${logo(null)}<div class="kicker">${L.kicker}</div><h2>${head.replace(/\n/g,"<br>")}</h2>
+      ${dl?`<div class="deadline">${goldShape("flag",560,96)}<span>${L.until(dl)}</span></div>`:""}`;
+    return;
+  }
+  $("s1").classList.remove("panels","logoR");
+  const T={2:{t:cell(0,0,1,2),p:[cell(1,0,1,2),cell(2,0,1,2)]},
+           3:{t:cell(0,0,1,2),p:[cell(1,0,1,2),cell(2,0),cell(2,1)]},
+           4:{t:cell(0,0,1,2),p:[cell(1,0),cell(2,0),cell(1,1),cell(2,1)]},
+           5:{t:cell(0,1),p:[cell(0,0),cell(1,0),cell(2,0),cell(1,1),cell(2,1)]}}[n];
+  const tiles=objs.map((o,i)=>{const c=COVERS[o];
+    return`<div class="tile" style="${T.p[i]}">${c&&c.url?`<div class="bg" style="background-image:url(${c.url})"></div>`:`<div class="ph"><span>${esc(c&&c.msg?c.msg:L.cover)}</span></div>`}<div class="tshade"></div>${logo(o)}</div>`}).join("");
+  $("s1").innerHTML=`${tiles}<div class="tblock" style="${T.t}"><div class="kicker">${L.kicker}</div><h2>${head.replace(/\n/g," ").replace(/(^|\s)([^\s]{1,3}) /g,"$1$2\u00a0").replace(/(^|\s)([^\s]{1,3}) /g,"$1$2\u00a0")}</h2>
+    ${dl?`<div class="deadline">${goldShape("flag",500,86)}<span>${L.until(dl)}</span></div>`:""}</div>`;
+  const h=$("s1").querySelector(".tblock h2"),blk=h.parentElement;let fs=58;h.style.fontSize=fs+"px";
+  while((h.scrollWidth>h.clientWidth+1||blk.scrollHeight>blk.clientHeight+1)&&fs>34){fs-=2;h.style.fontSize=fs+"px"}
+}
+/* Обложка: длинный заголовок — не больше 3 строк (уменьшаем шрифт), «Коммерческое предложение» всегда над заголовком */
+function fitCover(sl){
+  if(sl.classList.contains("mcover")&&!sl.classList.contains("panels"))return;
+  const h=sl.querySelector("h2"),k=sl.querySelector(".kicker");if(!h||!k)return;
+  h.style.fontSize="";k.style.bottom="";
+  const cs=getComputedStyle(h),lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.12;
+  let fs=parseFloat(cs.fontSize);
+  while(h.offsetHeight>lh/parseFloat(cs.fontSize)*fs*3+2&&fs>44){fs-=2;h.style.fontSize=fs+"px"}
+  const gap=sl.classList.contains("gl")?16:10;
+  k.style.bottom=(parseFloat(getComputedStyle(h).bottom)+h.offsetHeight+gap)+"px";
+}
+
+/* «Наверх»: плавно, появляется, когда форма ушла за экран */
+$("toTop").addEventListener("click",()=>{window.scrollTo({top:0,behavior:"smooth"});document.querySelector(".app").scrollTo({top:0,behavior:"smooth"})});
+const onScroll=()=>{$("toTop").hidden=$("f").getBoundingClientRect().bottom>0};
+addEventListener("scroll",onScroll,{passive:true});document.querySelector(".app").addEventListener("scroll",onScroll,{passive:true});
+
+/* Акция «Кредитные каникулы» (только WGBG): первый взнос сейчас, остаток через N месяцев */
+/* Круг: первый взнос — контур, остаток — сектор, выдвинутый наружу (50/50 → две половинки, 70/30 → «кусок пирога») */
+function pmPie(pvp,R,cx,cy,gap,stroke,fillRest,strokeCol){
+  const rest=Math.max(1,Math.min(99,100-pvp))/100,a0=-Math.PI/2,a1=a0+rest*2*Math.PI,bis=(a0+a1)/2;
+  const P=(a,r,dx=0,dy=0)=>`${(cx+dx+Math.cos(a)*r).toFixed(1)} ${(cy+dy+Math.sin(a)*r).toFixed(1)}`;
+  const dx=Math.cos(bis)*gap,dy=Math.sin(bis)*gap,big=rest>.5?1:0;
+  const wedge=`M${P(0,0,dx,dy)} L${P(a0,R,dx,dy)} A${R} ${R} 0 ${big} 1 ${P(a1,R,dx,dy)} Z`;
+  const ring=`M${P(0,0)} L${P(a1,R)} A${R} ${R} 0 ${big?0:1} 1 ${P(a0+2*Math.PI,R)} Z`;
+  return {svg:`<path d="${ring}" fill="none" stroke="${strokeCol}" stroke-width="${stroke}" stroke-linejoin="round"/><path d="${wedge}" fill="${fillRest}"/>`,bis};
+}
+const pmIcon=pvp=>`<svg class="pmic" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">${pmPie(pvp,26,32,32,3,2.5,"currentColor","currentColor").svg}</svg>`;
+function pmArtHtml(pvp,m,L){
+  const R=237,cx=300,cy=300,pie=pmPie(pvp,R,cx,cy,24,6,"url(#pmg)","#fff"),bis=pie.bis,opp=bis+Math.PI;
+  // подписи: остаток — у золотого сектора, первый взнос — с противоположной стороны (выравнивание вправо)
+  const rx=cx+24*Math.cos(bis)+Math.cos(bis)*R*.98+12,ry=cy+Math.sin(bis)*R*.7,lx=cx+Math.cos(opp)*R*.78,ly=cy+Math.sin(opp)*R*.62;
+  return `<div class="pmart"><svg viewBox="0 0 600 600" width="600" height="600" aria-hidden="true">
+     <defs><linearGradient id="pmg" x1="0" x2="1"><stop offset="0" stop-color="#9c7a4c"/><stop offset=".35" stop-color="#d8b583"/><stop offset=".7" stop-color="#a5793f"/><stop offset="1" stop-color="#c49a62"/></linearGradient></defs>${pie.svg}</svg>
+     <div class="pml" style="right:${600-lx}px;top:${ly}px"><b data-t="${pvp}%">${pvp}%</b><span data-t="${L.pmFirst.replace(/<br>/g," ")}">${L.pmFirst}</span></div>
+     <div class="pmr" style="left:${rx}px;top:${ry}px"><b data-t="${100-pvp}%">${100-pvp}%</b><span data-t="">${L.pmRest(m)}</span></div></div>`;
+}
+function pmHalo(sl){
+  sl.querySelectorAll(".pml,.pmr").forEach(el=>{
+    const h=el.cloneNode(true);h.className=el.className+" halo";h.removeAttribute("style");h.style.cssText=el.style.cssText;
+    h.querySelectorAll("b,span").forEach(t=>{const big=t.tagName==="B",w=big?9:5,sh=[];
+      for(let a=0;a<16;a++){const r=a*Math.PI/8;sh.push(`${(Math.cos(r)*w).toFixed(1)}px ${(Math.sin(r)*w).toFixed(1)}px 0 #0f2c35`)}
+      t.style.cssText="background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#0f2c35;text-shadow:"+sh.join(",")});
+    el.parentNode.insertBefore(h,el)});
+}
+function promoSlide(){
+  const L=T[st.lang],l=st.lang,multi=st.mode==="multi"&&KP.length,w=$("promoWrap");
+  const items=multi?KP:[snap()];
+  const on=st.proj!=="gl"&&items.every(o=>o.pay==="inst"&&o.promo&&o.obj!=="gl")&&items.every(o=>o.pv===items[0].pv&&o.months===items[0].months);
+  w.hidden=!on;if(!on)return;
+  // суммы по юнитам (цена со скидкой)
+  let eff=0,gdb=0;
+  items.forEach(o=>{const pr=toNum(o.price),d=toNum(o.disc),b=o.discUnit==="pct"?pr*d/100:d,e=pr-b;eff+=e;gdb+=e*toNum(o.pv)/100*toNum(o.gdboost)/100});
+  const pvp=toNum(items[0].pv),m=Math.max(1,toNum(items[0].months)),y=toNum(items[0].gdboost);
+  const pv=Math.round(eff*pvp/100),rest=Math.round(eff-eff*pvp/100); // показываем ровно эти два числа, их сумма = стоимость на слайде расчёта
+  $("sP").innerHTML=`${logo(kpObj())}<h2>${L.pmTitle}</h2>
+   <div class="pmsub"><span>${L.pmNow(pvp)}</span><span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0Z" fill="#fff"/></svg>${L.pmLater(100-pvp,m)}</span></div>
+   ${pmArtHtml(pvp,m,L)}
+   <div class="pmcards">${card(L.pv(pvp),eur(pv))}${card(L.pmCardRest(100-pvp,m),eur(rest))}${card(L.pmYield,pct(y,l),{gold:true})}${card(L.gdDuringY,eur(gdb),{gold:true})}</div>`;
+  pmHalo($("sP"));
+  $("sP").querySelectorAll(".pmcards .card .h").forEach(h=>{const t=h.querySelector("span")||h;let f=20;h.style.fontSize=f+"px";while((t.scrollWidth>t.clientWidth+1||h.scrollWidth>h.clientWidth+1)&&f>14){f-=.5;h.style.fontSize=f+"px"}});
+  $("sP").classList.toggle("sky",allSky());
+}
+$("promoPv").addEventListener("change",()=>{$("pv").value=$("promoPv").value;render()});
+$("promo").addEventListener("change",()=>{$("promoPvBox").hidden=!$("promo").checked;
+  if($("promo").checked){$("months").value=$("share").value==="1000"?13:6;$("pv").value=$("promoPv").value;$("gdmode").value="boost";if(!num("gdboost"))$("gdboost").value=7}
+  document.querySelectorAll(".boost-only").forEach(e=>e.hidden=$("gdmode").value!=="boost");render()});
+function fit(){document.querySelectorAll(".frame").forEach(fr=>{fr.firstElementChild.style.transform=`scale(${fr.clientWidth/1920})`})}
+new ResizeObserver(fit).observe(document.querySelector(".preview"));
+
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  st[b.dataset.k]=b.dataset.v;
+  b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  if(b.dataset.k==="mode")setMode(b.dataset.v);else if(b.dataset.k==="proj")setProj(b.dataset.v);else render();}));
+/* Проект: WGBG (5 объектов) или Grand Life (свой дизайн). Сборные КП — внутри одного проекта */
+function setProj(v){
+  st.proj=v;const gl=v==="gl";document.documentElement.classList.toggle("proj-gl",gl);
+  [...$("obj").options].forEach(o=>o.hidden=gl?o.value!=="gl":o.value==="gl");
+  $("promoBox").hidden=gl;if(gl)$("promo").checked=false;
+  $("obj").value=gl?"gl":"aqua";
+  $("obj").dispatchEvent(new Event("change",{bubbles:true}));
+  if(st.mode==="multi"){KP=[snap()];CUR=0;renderList();render()} // юниты другого проекта в сборное не переносим
+}
+$("f").addEventListener("input",e=>{if(e.target.id==="showAll")fillUnits();else if(e.target.id==="share")fillUnits();else if(e.target.id==="unit"||e.target.id==="manual")applyUnit();else render()});
+$("reload").addEventListener("click",loadLive);
+$("f").addEventListener("change",e=>{if(e.target.id==="obj"){const v=e.target.value;$("itc").value=(v==="villas"||v==="riviera")?9:7;$("gdinst").value=(v==="villas"||v==="riviera")?7:5;$("final").closest("label").hidden=v==="sky";fillUnits()}});
+$("f").addEventListener("submit",e=>e.preventDefault());
+if(document.fonts)document.fonts.ready.then(render);
+fillUnits();
+try{$("mgr").value=localStorage.getItem("autokp:mgr")||""}catch(e){}
+$("mgr").addEventListener("change",()=>{try{localStorage.setItem("autokp:mgr",$("mgr").value.trim())}catch(e){}});
+/* Обложки — из папки на Google Диске через коннектор Google Drive (как у зрителя).
+   Файл находится по имени (Aqua_Cover, Family_Club_Cover, …), ужимается в браузере до 1920×1080 JPEG
+   и кэшируется в браузере, чтобы не качать оригинал (5–10 МБ) каждый раз. */
+let COVER_FOLDER="";
+const COVER_NAME={aqua:"Aqua_Cover",fc:"Family_Club_Cover",villas:"Villas_Cover",riviera:"Riviera_Cover",sky:"Sky_Castle_Cover",gl:"Grand_Life_Cover"};
+function findB64(v,depth=0){
+  if(depth>6||v==null)return null;
+  if(typeof v==="string"){if(v.length<2000)return null;const t=v.startsWith("data:")?v.slice(v.indexOf(",")+1):v;return /^[A-Za-z0-9+/=\s_-]+$/.test(t.slice(0,200))?t:null}
+  if(typeof v==="object"){for(const k of Object.keys(v)){const r=findB64(v[k],depth+1);if(r)return r}}
+  return null;
+}
+async function shrink(blob){
+  const bmp=await createImageBitmap(blob),W=1920,H=1080,c=document.createElement("canvas");c.width=W;c.height=H;
+  const k=Math.max(W/bmp.width,H/bmp.height),w=bmp.width*k,h=bmp.height*k;
+  c.getContext("2d").drawImage(bmp,(W-w)/2,(H-h)/2,w,h);
+  return c.toDataURL("image/jpeg",.82);
+}
+async function loadCovers(){
+  let mcp=null;try{mcp=GAS}catch(e){}
+  for(const [obj,name] of Object.entries(COVER_NAME)){
+    try{const k=Object.keys(localStorage).find(k=>k.startsWith("cover:"+name+":"));if(k)COVERS[obj]={url:localStorage.getItem(k)}}catch(e){}
+  }
+  render();
+  if(!mcp||!COVER_FOLDER)return;
+  let files=[];
+  try{
+    const r=await mcp.callTool("Google Drive","search_files",{query:`parentId = '${COVER_FOLDER}'`,excludeContentSnippets:true,pageSize:50});
+    files=(r.payload&&r.payload.files)||[];
+  }catch(e){
+    const m={needs_reauth:"Переподключи Google Drive в claude.ai → Connectors",server_not_connected:"Подключи Google Drive в claude.ai → Connectors",
+      not_in_manifest:"Странице не разрешено читать Google Drive",approval_required:"Нужно разрешить странице читать Google Drive"}[e&&e.code]||"Не получилось открыть папку с обложками";
+    for(const o in COVER_NAME)if(!COVERS[o])COVERS[o]={msg:m};render();return;
+  }
+  for(const [obj,name] of Object.entries(COVER_NAME)){
+    const f=files.find(x=>String(x.title||"").toLowerCase().startsWith(name.toLowerCase()));
+    if(!f){if(!COVERS[obj])COVERS[obj]={msg:`В папке нет файла ${name}`};continue}
+    const key="cover:"+name+":"+(f.modifiedTime||"");
+    try{const c=localStorage.getItem(key);if(c){COVERS[obj]={url:c};continue}}catch(e){}
+    if(!COVERS[obj])COVERS[obj]={msg:"Загружаю обложку с Диска…"};
+    if($("obj").value===obj)render();
+    try{
+      const r=await mcp.callTool("Google Drive","download_file_content",{fileId:f.id});
+      const b64=findB64(r.payload)||findB64(r.content);
+      if(!b64)throw{code:"no_data"};
+      const bin=atob(b64.replace(/\s/g,"").replace(/-/g,"+").replace(/_/g,"/")),u8=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+      const url=await shrink(new Blob([u8],{type:f.mimeType||"image/jpeg"}));
+      COVERS[obj]={url};
+      try{Object.keys(localStorage).filter(k=>k.startsWith("cover:"+name)).forEach(k=>localStorage.removeItem(k));localStorage.setItem(key,url)}catch(e){}
+    }catch(e){
+      const code=(e&&e.code)||(e&&e.name)||"unknown",det=String((e&&e.message)||"").slice(0,140);
+      COVERS[obj]={msg:`Не получилось загрузить ${f.title} (${(+f.fileSize/1048576).toFixed(1)} МБ) · код: ${code}${det?" · "+det:""}`};
+    }
+    if($("obj").value===obj)render();
+  }
+  render();
+}
+
+/* Планировки — из папок на Диске по объектам. Aqua: файл «Aqua <тип> - NN» по номеру юнита на этаже
+   (типовые на всех этажах, кроме 10-го). Если в имени файла есть полный номер юнита (например 1008) — он важнее. */
+async function listFolder(mcp,folder){
+  let out=[],token="";
+  for(let i=0;i<10;i++){
+    const r=await mcp.callTool("Google Drive","search_files",Object.assign({query:`parentId = '${folder}'`,excludeContentSnippets:true,pageSize:100},token?{pageToken:token}:{}));
+    const p=r.payload||{};out=out.concat(p.files||[]);token=p.nextPageToken;if(!token||!(p.files||[]).length)break;
+  }
+  return out;
+}
+/* Номера юнитов из имени файла планировки Family Club. Понимает варианты:
+   «1-10А Family Suite…», «101_B_Junior Suite…», «201, 301B Family Suite…», «A 201, 301 Deluxe Suite…», «409A Penthouse…».
+   Кириллические А/В приводятся к латинским. Файлы без типа номера в имени (например, «A 1 floor») пропускаются. */
+function unitsFromPlanName(title){
+  const t=String(title).replace(/А/g,"A").replace(/В/g,"B").replace(/_/g," ");
+  const m=t.match(/^(.*?)(deluxe|junior|family|penthouse|suite|lounge|villa|townhouse)/i);if(!m)return[];
+  const head=m[1];
+  const pre=(head.match(/(^|\s)([AB])(\s|$)/)||[])[2]||"";
+  const toks=head.match(/\d+(?:-\d+)?[AB]?/g)||[];
+  const suf=(toks.map(x=>(x.match(/[AB]$/)||[])[0]).find(Boolean))||"";
+  return toks.map(x=>/[AB]$/.test(x)?x:x+(suf||pre));
+}
+function planFileFor(obj){
+  const files=PLAN_FILES[obj];if(!files)return null;
+  const imgs=files.filter(f=>String(f.mimeType||"image/").startsWith("image/"));
+  if(imgs.length===1)return imgs[0]; // одна планировка на все юниты объекта
+  const id=$("unit").value,room=String($("room").value||"").trim(),floor=String($("floor").value||"").trim();
+  if(obj!=="aqua"&&id){
+    const want=id.replace(/А/g,"A").replace(/В/g,"B").replace(/\s/g,"").toUpperCase();
+    const hit=files.find(f=>unitsFromPlanName(f.title).includes(want));
+    if(hit)return hit;
+  }
+  const exact=id&&files.find(f=>new RegExp(`(^|\\D)${id}(\\D|$)`).test(f.title.replace(/А/g,"A").replace(/В/g,"B")));
+  if(!exact&&obj==="gl"){
+    const m=id.match(/^(\d+)([AB])$/);if(!m||+m[1]<200)return null; // 1 этаж — City House, своя планировка по полному номеру
+    const want=pad2(+m[1]%100)+m[2];
+    return files.find(f=>f.title.replace(/А/g,"A").replace(/В/g,"B").replace(/\.[a-z]+$/i,"").trim().endsWith("- "+want))||null;
+  }
+  if(exact)return exact;
+  if(obj==="aqua"){
+    if(floor==="10")return null; // Signature Suite — своя планировка по полному номеру
+    const nn=room.padStart(2,"0");
+    return files.find(f=>new RegExp(`-\\s*${nn}\\.[a-z]+$`,"i").test(f.title))||null;
+  }
+  return null;
+}
+async function fitImage(blob,maxW,maxH,bg="#fff"){
+  const bmp=await createImageBitmap(blob),k=Math.min(1,maxW/bmp.width,maxH/bmp.height);
+  const c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+  const g=c.getContext("2d");g.fillStyle=bg;g.fillRect(0,0,c.width,c.height);g.drawImage(bmp,0,0,c.width,c.height);
+  return c.toDataURL("image/jpeg",.85);
+}
+async function driveBlob(mcp,f){
+  const r=await mcp.callTool("Google Drive","download_file_content",{fileId:f.id});
+  const b64=findB64(r.payload)||findB64(r.content);if(!b64)throw{code:"no_data"};
+  const bin=atob(b64.replace(/\s/g,"").replace(/-/g,"+").replace(/_/g,"/")),u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  return new Blob([u8],{type:f.mimeType||"image/png"});
+}
+async function loadPlanFolders(){
+  try{PLAN_MCP=GAS}catch(e){}
+  if(!PLAN_MCP)return;
+  for(const [obj,folder] of Object.entries(PLAN_FOLDERS)){
+    try{PLAN_FILES[obj]=await listFolder(PLAN_MCP,folder)}catch(e){PLAN_STATE[obj]="Не получилось открыть папку с планировками: "+((e&&e.code)||"")}
+  }
+  for(const [obj,folder] of Object.entries(MAP_FOLDERS)){
+    try{MAP_FILES[obj]=await listFolder(PLAN_MCP,folder)}catch(e){}
+  }
+  for(const [obj,folder] of Object.entries(INT_FOLDERS)){
+    try{INT_FILES[obj]=await listFolder(PLAN_MCP,folder)}catch(e){}
+  }
+  render();
+}
+/* Прозрачные PNG планировок заливаем цветом левой панели: белый у WGBG, кремовый у Grand Life */
+async function ensurePlan(f,obj){
+  const bg=obj==="gl"?"#f2e3d0":"#fff",key="plan2:"+bg+":"+f.id+":"+(f.modifiedTime||"");
+  if(PLAN_IMG[f.id]||PLAN_STATE[f.id]==="loading")return;
+  try{const c=localStorage.getItem(key);if(c){PLAN_IMG[f.id]=c;render();return}}catch(e){}
+  if(!PLAN_MCP)return;
+  PLAN_STATE[f.id]="loading";
+  try{
+    const url=await fitImage(await driveBlob(PLAN_MCP,f),1300,1300,bg);
+    PLAN_IMG[f.id]=url;delete PLAN_STATE[f.id];
+    try{localStorage.setItem(key,url)}catch(e){}
+  }catch(e){PLAN_STATE[f.id]="Не получилось загрузить "+f.title+" · "+((e&&e.code)||"")}
+  render();
+}
+/* Слайд без картинки не попадает в итоговый КП: в превью он остаётся, бледный, с причиной; нумерация пересчитывается */
+function setSkipEl(w,reason){w.dataset.skip=reason||"";w.classList.toggle("skip",!!reason)}
+function setSkip(wrapId,reason){setSkipEl($(wrapId),reason)}
+function numberSlides(){
+  let n=0;const out=[];
+  document.querySelectorAll(".preview .sw").forEach(w=>{
+    if(w.hidden)return;const num=w.querySelector(".num"),t=w.dataset.title;
+    if(w.dataset.skip){num.textContent=`Не войдёт в КП · ${t} — ${w.dataset.skip}`;return}
+    n++;num.textContent=`Слайд ${n} · ${t}`;out.push(t);
+  });
+  $("kpSum").textContent=`В КП ${n} ${plural(n,"слайд","слайда","слайдов")}`;
+}
+/* Слайд «юнит на генплане» — только Villas и Riviera, сразу после расчёта */
+function mapInto(slide,capEl,wrap){
+  const obj=$("obj").value,on=obj==="villas"||obj==="riviera";
+  wrap.hidden=!on;if(!on)return;
+  const id=$("unit").value,files=MAP_FILES[obj],en=st.lang==="en";
+  const f=files&&id?files.find(x=>new RegExp(`(^|\\D)${id}(\\D|$)`).test(x.title)):null;
+  // картинка экспортирована из Figma целиком, вместе с логотипом — свой логотип поверх не ставим
+  if(f&&MAP_IMG[f.id]){slide.innerHTML=`<img class="photo" src="${MAP_IMG[f.id]}" alt="">`;capEl.textContent=f.title;setSkipEl(wrap,"");return}
+  if(f)ensureMap(f);
+  const loading=f?(!MAP_STATE[f.id]||MAP_STATE[f.id]==="loading"):(!files&&PLAN_MCP&&!!MAP_FOLDERS[obj]);
+  const note=f?(loading?"загружаю с Диска…":"не получилось загрузить "+f.title):
+    files?`в папке нет картинки для юнита ${id}`:(MAP_FOLDERS[obj]?"нет доступа к Диску":"папка с генпланом не подключена");
+  slide.innerHTML=`<div class="ph"><div>${obj==="villas"?(en?"Villa":"Вилла"):(en?"Townhouse":"Таунхаус")} ${esc(id||"")} ${en?"on the masterplan":"на генплане"}<small>${esc(note)}</small></div></div>${logo()}`;
+  capEl.textContent="";
+  setSkipEl(wrap,loading?"":note);
+}
+async function ensureMap(f){
+  const key="map:"+f.id+":"+(f.modifiedTime||"");
+  if(MAP_IMG[f.id]||MAP_STATE[f.id]==="loading")return;
+  try{const c=localStorage.getItem(key);if(c){MAP_IMG[f.id]=c;render();return}}catch(e){}
+  if(!PLAN_MCP)return;
+  MAP_STATE[f.id]="loading";
+  try{const url=await shrink(await driveBlob(PLAN_MCP,f));MAP_IMG[f.id]=url;delete MAP_STATE[f.id];try{localStorage.setItem(key,url)}catch(e){}}
+  catch(e){MAP_STATE[f.id]="error"}
+  render();
+}
+function interiorFileFor(obj){
+  const files=INT_FILES[obj];if(!files)return null;
+  const imgs=files.filter(f=>String(f.mimeType||"image/").startsWith("image/"));
+  if(imgs.length===1)return imgs[0]; // один интерьер на все юниты объекта
+  // Тип номера — часть имени файла после « - »: «Family Club - Deluxe Suite.jpg», «Aqua - Luxe and Deluxe Interior.jpg»
+  const norm=v=>String(v||"").toLowerCase().replace(/е/g,"e").replace(/\(.*?\)/g,"").replace(/[^a-z0-9]+/g," ").trim();
+  const cat=norm($("cat").value);if(!cat)return null;
+  const part=f=>norm(String(f.title).replace(/\.[a-z0-9]+$/i,"").split(" - ").slice(1).join(" - ").replace(/interior/i,""));
+  const full=files.find(f=>{const p=part(f);return p&&(cat===p||cat.startsWith(p+" ")||p.startsWith(cat+" "))});
+  if(full)return full;
+  const w=cat.split(" ")[0];
+  return files.find(f=>(" "+part(f)+" ").includes(" "+w+" "))||null;
+}
+async function ensureInterior(f){
+  const key="int:"+f.id+":"+(f.modifiedTime||"");
+  if(INT_IMG[f.id]||INT_STATE[f.id]==="loading")return;
+  try{const c=localStorage.getItem(key);if(c){INT_IMG[f.id]=c;render();return}}catch(e){}
+  if(!PLAN_MCP)return;
+  INT_STATE[f.id]="loading";
+  try{
+    const url=await shrink(await driveBlob(PLAN_MCP,f));
+    INT_IMG[f.id]=url;delete INT_STATE[f.id];
+    try{localStorage.setItem(key,url)}catch(e){}
+  }catch(e){INT_STATE[f.id]="Не получилось загрузить "+f.title+" · "+((e&&e.code)||"")}
+  render();
+}
+function planHtml(L,cat){
+  const obj=$("obj").value,f=planFileFor(obj);
+  // планировка вписывается в свободное место целиком, с сохранением пропорций (маленькие файлы растягиваются)
+  if(f&&PLAN_IMG[f.id])return`<div class="plan has"><div class="pimg" style="background-image:url(${PLAN_IMG[f.id]})"></div></div>`;
+  let note=L.planS;
+  if(f){ensurePlan(f,obj);note=PLAN_STATE[f.id]&&PLAN_STATE[f.id]!=="loading"?PLAN_STATE[f.id]:"загружаю с Диска…"}
+  else if(PLAN_FILES[obj]&&obj==="aqua"&&String($("floor").value)==="10")note="Signature Suite: нужен файл с номером юнита в имени";
+  else if(PLAN_FILES[obj])note="в папке нет планировки для этого юнита";
+  else if(PLAN_STATE[obj])note=PLAN_STATE[obj];
+  else if(!PLAN_FOLDERS[obj])note="папка с планировками не подключена";
+  return`<div class="plan"><div>${L.plan} ${esc(obj==="gl"?($("unit").value||cat):cat)}<small>${esc(note)}</small></div></div>`;
+}
+
+/* ---------- Запуск: настройки → прайс, обложки, планировки ---------- */
+async function init(){
+  $("dataStatus").textContent="Загружаю настройки…";
+  let c;
+  try{c=await api("getConfig")}
+  catch(e){
+    if(e.code==="access"){$("codeBox").hidden=false;$("mainBox").hidden=true;$("codeNote").hidden=!ACODE;$("dataStatus").textContent="";return}
+    $("dataStatus").textContent="Не получилось прочитать настройки: "+e.message;return;
+  }
+  $("codeBox").hidden=true;$("mainBox").hidden=false;
+  COVER_FOLDER=c.covers||"";
+  Object.assign(PLAN_FOLDERS,c.plans||{});Object.assign(INT_FOLDERS,c.interiors||{});Object.assign(MAP_FOLDERS,c.maps||{});
+  loadLive();loadCovers();loadPlanFolders();
+}
+$("codeBtn").addEventListener("click",()=>{ACODE=$("acode").value.trim();try{localStorage.setItem("autokp:code",ACODE)}catch(e){}init()});
+
+/* ---------- PDF ---------- */
+const MOBILE=matchMedia("(pointer:coarse)").matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const PDF_LIMIT=2.5*1048576;
+function includedSlides(){return[...document.querySelectorAll(".preview .sw")].filter(w=>!w.hidden&&!w.dataset.skip).map(w=>w.querySelector(".slide"))}
+/* Имя файла: Объект_юнит[_доля]_fix|ПВ%_язык — Riviera_37_fix_ru, Aqua_304_70%_en, Sky Castle_603_1-8_fix_ru.
+   Сборное: до 2 юнитов — через «+», больше — CO_4_units_en / КП_4_юнита_ru. Кириллица в номерах → латиница. */
+function kpName(){
+  const LAT={А:"A",В:"B",Б:"B",С:"C",Е:"E",Н:"H",К:"K",М:"M",О:"O",Р:"P",Т:"T",Х:"X",а:"a",в:"b",с:"c",е:"e",о:"o",р:"p",х:"x"};
+  const lat=v=>String(v||"").trim().replace(/[А-яЁё]/g,c=>LAT[c]||"").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ");
+  const part=o=>{const sh={"500":"1-2","250":"1-4","125":"1-8"}[o.share];
+    return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(Math.round(toNum(o.pv))||0)+"%":"fix"].filter(Boolean).join("_")};
+  const l=st.lang;
+  if(st.mode==="multi"&&KP.length>1){
+    KP[CUR]=snap();
+    if(KP.length<=2)return KP.map(part).join("+")+"_"+l;
+    return l==="en"?`CO_${KP.length}_units_en`:`КП_${KP.length}_${plural(KP.length,"юнит","юнита","юнитов")}_ru`;
+  }
+  return part(snap())+"_"+l;
+}
+function checkReady(){
+  if(!$("mgr").value.trim()){$("mgr").focus();return"Укажите своё имя — оно попадёт в журнал КП."}
+  if(st.mode==="multi"){KP[CUR]=snap();const bad=KP.findIndex(k=>toNum(k.price)<=0);if(bad>=0)return`У юнита №${bad+1} в списке нет цены.`;return""}
+  if(num("price")<=0)return"Нет цены юнита. Выберите юнит или включите «Индивидуальный расчёт».";
+  return"";
+}
+function logKp(mode){
+  const d={manager:$("mgr").value.trim(),object:$("obj").value,unit:$("unit").value,share:SHARE_LBL[$("share").value]||"целый",
+    lang:st.lang,pay:st.pay==="inst"?"рассрочка":"100%",price:num("price"),discount:$("disc").value+(st.discUnit==="pct"?"%":"€"),
+    months:st.pay==="inst"?num("months"):"",pv:st.pay==="inst"?num("pv"):"",gd:$("gdmode").value,deadline:$("deadline").value,
+    manual:$("manual").checked,headline:$("headline").selectedOptions[0].text,slides:includedSlides().length,mode};
+  if(st.mode==="multi"&&KP.length>1){d.object="сборное: "+[...new Set(KP.map(k=>NAME_IN_PRICES[k.obj]))].join(", ");
+    d.unit=KP.map(k=>NAME_IN_PRICES[k.obj]+" "+(k.unit||k.room)+(SHARE_LBL[k.share]?" "+SHARE_LBL[k.share]:"")).join("; ");d.share="";
+    d.price=KP.reduce((a,k)=>a+toNum(k.price),0);d.months="";d.pv="";d.pay=[...new Set(KP.map(k=>k.pay==="inst"?"рассрочка "+k.months+" мес":"100%"))].join(", ")}
+  api("logKP",d).catch(()=>{});
+}
+function cloneForExport(s){const c=s.cloneNode(true);c.removeAttribute("id");c.style.transform="none";return c}
+function printPdf(){
+  const root=$("printRoot");root.innerHTML="";
+  includedSlides().forEach(s=>{const pg=document.createElement("div");pg.className="page";pg.appendChild(cloneForExport(s));root.appendChild(pg)});
+  const t=document.title;document.title=kpName();document.body.classList.add("printing");
+  setTimeout(()=>{try{window.print()}finally{document.title=t;document.body.classList.remove("printing");root.innerHTML=""}},250);
+  $("pdfStatus").textContent="Принтер — только «Сохранить как PDF» (не Microsoft Print to PDF). В «Дополнительных настройках» снимите «Колонтитулы».";
+}
+async function imagePdf(){
+  const host=$("renderHost"),slides=includedSlides(),shots=[];
+  $("pdfBtn").disabled=true;$("pdfOpen").hidden=true;
+  try{
+    for(let i=0;i<slides.length;i++){
+      $("pdfStatus").textContent=`Готовлю слайд ${i+1} из ${slides.length}…`;
+      const c=cloneForExport(slides[i]);host.appendChild(c);
+      shots.push(await html2canvas(c,{scale:1.5,backgroundColor:"#ffffff",width:1920,height:1080,windowWidth:1920,windowHeight:1080,logging:false}));
+      host.innerHTML="";
+    }
+    let q=.86,blob;
+    for(;;){
+      const pdf=new jspdf.jsPDF({orientation:"landscape",unit:"px",format:[1920,1080],hotfixes:["px_scaling"],compress:true});
+      shots.forEach((cv,i)=>{if(i)pdf.addPage([1920,1080],"landscape");pdf.addImage(cv.toDataURL("image/jpeg",q),"JPEG",0,0,1920,1080,undefined,"FAST")});
+      blob=pdf.output("blob");if(blob.size<=PDF_LIMIT||q<=.5)break;q-=.08;
+    }
+    const url=URL.createObjectURL(blob),name=kpName()+".pdf";
+    const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    $("pdfOpen").href=url; // ссылка «Открыть, если не скачался» скрыта до тестов
+    $("pdfStatus").textContent="PDF готов.";
+  }catch(e){$("pdfStatus").textContent="Не получилось собрать PDF: "+(e&&e.message||e)}
+  finally{$("pdfBtn").disabled=false;host.innerHTML=""}
+}
+$("pdfBtn").addEventListener("click",()=>{const err=checkReady();if(err){$("pdfStatus").textContent=err;return}
+  logKp("картинки");imagePdf()});
+$("pdfImgBtn").addEventListener("click",()=>{const err=checkReady();if(err){$("pdfStatus").textContent=err;return}logKp("печать");printPdf()});
+$("pdfImgBtn").hidden=MOBILE;
+
+init();
+</script>
+
+</body></html>
