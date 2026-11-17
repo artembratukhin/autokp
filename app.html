@@ -347,7 +347,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. Цены — из актуального прайса. <span style="opacity:.55">· версия 2026-11-17 12-45</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b> <span style="opacity:.55">· версия 2026-11-17 12-55</span></p>
   </header>
 
   <div class="side">
@@ -756,6 +756,8 @@ async function loadLive(){
   try{
     const mm=String(((await get("'Справочник'!Q2"))[0]||[])[0]||"").match(/(\d{2})\.(\d{4})$/);
     const month=mm?`${mm[1]}.${mm[2]}`:"11.2026";
+    {const MN=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],[mo,yr]=month.split(".");
+     $("priceMonth").textContent=(MN[+mo-1]||month)+" "+(yr||"")}
     // все листы — одним обращением к серверу (см. batcher)
     const [prices,aqua,fc,villas,sky,utp,riv,gl,dir]=await Promise.all([
       get("'Цены'!A2:BO3000"),get(`'src_Aqua ${month}'!C2:AE1500`),get(`'src_Family_Club ${month}'!C2:AE1500`),
@@ -1068,7 +1070,7 @@ function renderMulti(L){
   const sw=ws[w],g=summaryInto(sw.querySelector(".slide"),Ms,L);
   
 }
-/* Итоговый слайд: суммы по всем юнитам. Есть хотя бы один Sky Castle — вместо цены на окончание и перепродажи «Рост стоимости в год: от 30%».
+/* Итоговый слайд: суммы по всем юнитам. Есть хотя бы один Sky Castle — без цены на окончание, перепродажи и «Роста стоимости в год».
    Рассрочка разная (срок или ПВ) — карточку рассрочки не выводим. */
 function summaryInto(el,Ms,L){
   const l=st.lang,S=k=>Ms.reduce((a,m)=>a+(m[k]||0),0),n=Ms.length;
@@ -1078,7 +1080,7 @@ function summaryInto(el,Ms,L){
   const items=[];let gold=0;const P=(a,b)=>pct(b?a/b*100:0,l);
   if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(P(ben,price)),eur(ben))}</div>`});gold++}
   const cur=card(L.current,eur(price),{gold:!hasDisc});if(!hasDisc)gold++;
-  if(anySky)items.push({h:134,html:`<div class="row">${cur}${card(L.growth,L.growthV)}</div>`});
+  if(anySky)items.push({h:134,html:cur}); // есть Sky Castle — без «Роста стоимости в год», цена на всю ширину
   else if(allFin){
     items.push({h:134,html:`<div class="row">${cur}${card(L.final,eur(fin))}</div>`});
     const rs=fin-eff;if(Math.round(rs)>0)items.push({h:134,html:card(L.resale,split(eur(rs),P(rs,eff)))});
