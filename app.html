@@ -315,6 +315,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 .big{font-size:50px}
 .sm{font-size:18px;margin-top:6px;line-height:1.2;opacity:.9;white-space:normal}
 .inst .card{height:150px}
+.calcbadge.lbadge{width:100%;margin-top:22px;font-size:22px;white-space:nowrap}
 .calcbadge{height:47px;display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
 /* ---------- выгрузка PDF ---------- */
 #printRoot{display:none}
@@ -346,7 +347,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. Цены — из актуального прайса. <span style="opacity:.55">· версия 2026-11-16 19-12</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. Цены — из актуального прайса. <span style="opacity:.55">· версия 2026-11-17 12-45</span></p>
   </header>
 
   <div class="side">
@@ -942,15 +943,16 @@ function calcInto(el){
   const rciN=Math.round(num("rci")),itcN=Math.round(num("itc"));
   const rciD=`<span class="big">${L.itc(rciN)}</span><span class="sm">${L.d60s}</span>`,itcD=`<span class="big">${L.itc(itcN)}</span><span class="sm">${L.itcs}</span>`;
   if(rciN>0||itcN>0)items.push({h:163,html:card(L.days,rciN>0&&itcN>0?split(rciD,itcD):`<div>${rciN>0?rciD:itcD}</div>`,{cls:"days"})});
-  const badgeFits=!!dl&&items.length<=5; // как в макете Aqua 2018: 5 блоков + плашка
-  if(badgeFits){items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1010,47)}<span>${L.untilLine(dl)}</span></div>`});gold++}
+  // плашка срока условий — в левой панели, под условиями оплаты
+  const badgeFits=!!dl,badge=dl?`<div class="deadline calcbadge lbadge">${goldShape("bar",638,47)}<span>${L.untilLine(dl)}</span></div>`:"";
+  if(badgeFits)gold++;
   // одинаковая высота карточек; если не влезает — сжимаем только промежутки (20 → 6 px)
   const TOP=obj==="gl"?176:140,AVAIL=1030-TOP,sum=items.reduce((a,b)=>a+b.h,0);
   const gap=Math.max(6,Math.min(obj==="gl"?28:20,(AVAIL-sum)/Math.max(1,items.length-1)));
   const top=obj==="gl"?TOP:TOP+Math.max(0,(AVAIL-sum-gap*(items.length-1))/2); // Grand Life: карточки от верха, как в макете
 
   el.innerHTML=`<div class="left"><div class="cat goldfill edge">${shLbl?(l==="ru"?`${shLbl} часть `:`${shLbl} part of `):""}${esc(cat)}</div><div class="specs">${sp.map(s=>`<span>${s}</span>`).join("")}</div>
-   ${planHtml(L,cat)}${bottom}</div>${logo()}
+   ${planHtml(L,cat)}${bottom}${badge}</div>${logo()}
    <div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>`;
 
   el.classList.toggle("sky",obj==="sky");el.classList.toggle("gl",obj==="gl");
@@ -1121,10 +1123,10 @@ function multiCover(objs,L,dl){
              4:[[0,0,960,540],[960,0,960,540],[0,540,960,540],[960,540,960,540]]}[n];
     $("s1").classList.add("panels");$("s1").classList.toggle("logoR",n===3);
     $("s1").innerHTML=objs.map((o,i)=>{const c=COVERS[o],[x,y,w,h]=P[i];
-      return`<div class="pnl" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${c&&c.url?`<div class="bg" style="background-image:url(${c.url})"></div>`:`<div class="ph"><span>${esc(c&&c.msg?c.msg:L.cover)}</span></div>`}</div>`}).join("")+
+      return`<div class="pnl" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${c&&c.url?`<div class="bg"${COVER_FOCUS[o]?` data-f="${COVER_FOCUS[o]}"`:""} style="background-image:url(${c.url})"></div>`:`<div class="ph"><span>${esc(c&&c.msg?c.msg:L.cover)}</span></div>`}</div>`}).join("")+
       `<div class="shade"></div>${logo(null)}<div class="kicker">${L.kicker}</div><h2>${head.replace(/\n/g,"<br>")}</h2>
       ${dl?`<div class="deadline">${goldShape("flag",560,96)}<span>${L.until(dl)}</span></div>`:""}`;
-    return;
+    focusCovers();return;
   }
   $("s1").classList.remove("panels","logoR");
   const T={2:{t:cell(0,0,1,2),p:[cell(1,0,1,2),cell(2,0,1,2)]},
@@ -1132,11 +1134,23 @@ function multiCover(objs,L,dl){
            4:{t:cell(0,0,1,2),p:[cell(1,0),cell(2,0),cell(1,1),cell(2,1)]},
            5:{t:cell(0,1),p:[cell(0,0),cell(1,0),cell(2,0),cell(1,1),cell(2,1)]}}[n];
   const tiles=objs.map((o,i)=>{const c=COVERS[o];
-    return`<div class="tile" style="${T.p[i]}">${c&&c.url?`<div class="bg" style="background-image:url(${c.url})"></div>`:`<div class="ph"><span>${esc(c&&c.msg?c.msg:L.cover)}</span></div>`}<div class="tshade"></div>${logo(o)}</div>`}).join("");
+    return`<div class="tile" style="${T.p[i]}">${c&&c.url?`<div class="bg"${COVER_FOCUS[o]?` data-f="${COVER_FOCUS[o]}"`:""} style="background-image:url(${c.url})"></div>`:`<div class="ph"><span>${esc(c&&c.msg?c.msg:L.cover)}</span></div>`}<div class="tshade"></div>${logo(o)}</div>`}).join("");
   $("s1").innerHTML=`${tiles}<div class="tblock" style="${T.t}"><div class="kicker">${L.kicker}</div><h2>${head.replace(/\n/g," ").replace(/(^|\s)([^\s]{1,3}) /g,"$1$2\u00a0").replace(/(^|\s)([^\s]{1,3}) /g,"$1$2\u00a0")}</h2>
     ${dl?`<div class="deadline">${goldShape("flag",500,86)}<span>${L.until(dl)}</span></div>`:""}</div>`;
   const h=$("s1").querySelector(".tblock h2"),blk=h.parentElement;let fs=58;h.style.fontSize=fs+"px";
   while((h.scrollWidth>h.clientWidth+1||blk.scrollHeight>blk.clientHeight+1)&&fs>34){fs-=2;h.style.fontSize=fs+"px"}
+  focusCovers();
+}
+/* Где на фото обложки главный объект (доля ширины слева). Sky Castle стоит в правой трети.
+   В узкой плитке кадрируем так, чтобы эта точка была по центру плитки (насколько позволяет фото). */
+const COVER_FOCUS={sky:.83};
+function focusCovers(){
+  $("s1").querySelectorAll(".bg[data-f]").forEach(el=>{
+    const f=+el.dataset.f,m=/url\("?(.*?)"?\)$/.exec(el.style.backgroundImage);if(!m)return;
+    const W=parseFloat(el.parentElement.style.width),H=parseFloat(el.parentElement.style.height),im=new Image();
+    im.onload=()=>{const k=Math.max(W/im.naturalWidth,H/im.naturalHeight),iw=im.naturalWidth*k;
+      if(iw-W<1)return;const p=Math.min(1,Math.max(0,(f*iw-W/2)/(iw-W)));el.style.backgroundPosition=(p*100).toFixed(1)+"% 50%"};
+    im.src=m[1]});
 }
 /* Обложка: длинный заголовок — не больше 3 строк (уменьшаем шрифт), «Коммерческое предложение» всегда над заголовком */
 function fitCover(sl){
