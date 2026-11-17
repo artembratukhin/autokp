@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 18-35</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 18-40</span></p>
   </header>
 
   <div class="side">
@@ -1107,7 +1107,7 @@ function summaryInto(el,Ms,L){
   if(kinds.size===1&&kinds.has("std")){
     if(hotel>0)items.push({h:134,html:card(L.hotel,split(eur(hotel),P(hotel,price)))});
     items.push({h:134,html:card(hasDisc?L.gdYear:L.gdHotel,split(eur(S("gdStd")),P(S("gdStd"),eff)))});
-  }else if(kinds.size===1&&kinds.has("boost")&&S("gdBoost")<=0){ // все без первого взноса — ГД только после выплаты, золотой
+  }else if(kinds.size===1&&kinds.has("boost")&&Ms.every(m=>m.pvp<=0)){ // все без первого взноса — ГД только после выплаты, золотой
     items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)),{gold:true})});gold++;
   }else if(kinds.size===1&&kinds.has("boost")){
     items.push({h:134,html:card(L.gdDuring,split(eur(S("gdBoost")),P(S("gdBoost"),pv)),{gold:true})});gold++;
