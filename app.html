@@ -347,7 +347,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b> <span style="opacity:.55">· версия 2026-11-17 13-35</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 14-10</span></p>
   </header>
 
   <div class="side">
@@ -1481,6 +1481,7 @@ async function init(){
   }
   $("codeBox").hidden=true;$("mainBox").hidden=false;
   COVER_FOLDER=c.covers||"";
+  if(c.priceTs)$("priceTs").textContent=" · опубликован "+c.priceTs;
   Object.assign(PLAN_FOLDERS,c.plans||{});Object.assign(INT_FOLDERS,c.interiors||{});Object.assign(MAP_FOLDERS,c.maps||{});
   loadLive();loadCovers();loadPlanFolders();
 }
