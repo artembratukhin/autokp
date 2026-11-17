@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-40</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-50</span></p>
   </header>
 
   <div class="side">
@@ -870,6 +870,13 @@ function syncForm(){
   document.querySelectorAll(".inst-only").forEach(e=>e.hidden=st.pay!=="inst");
 }
 const SHARE_LBL={"500":"1/2","250":"1/4","125":"1/8"};
+/* Стандартный ГД после оплаты по объекту и части — из «Справочника» (иначе из прайса). null — сравнивать не с чем */
+function stdGdFull(){
+  const o=$("obj").value,u=(UNITS[o]||[]).find(x=>x.id===$("unit").value),sh=$("share").value;
+  const d=DIR[((o==="gl"?(u?"grand life "+(u.block||String(u.id).slice(-1)):""):NAME_IN_PRICES[o])||"").toLowerCase()+"|"+sh];
+  const v=d&&d.gd?+d.gd:(u&&u.gd?Math.round(u.gd*10)/10:null);
+  return v>0?v:null;
+}
 let shareNote="";
 function applyUnit(){
   const list=UNITS[$("obj").value]||[],u=list.find(x=>x.id===$("unit").value);
@@ -941,7 +948,9 @@ function calcInto(el){
     items.push({h:134,html:card(promo?L.gdDuringY:L.gdDuring,split(eur(pv*num("gdboost")/100),pct(num("gdboost"),l)),{gold:true})});gold++;
     items.push({h:134,html:card(promo?L.gdAfterY:L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)))});
   }else{
-    items.push({h:134,html:card(L.gdYear,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)))});
+    // ГД выше стандартного по объекту — блок золотой
+    const sg=stdGdFull(),up=sg!==null&&num("gdfull")>sg+1e-9;if(up)gold++;
+    items.push({h:134,html:card(L.gdYear,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)),{gold:up})});
   }
   const rciN=Math.round(num("rci")),itcN=Math.round(num("itc"));
   const rciD=`<span class="big">${L.itc(rciN)}</span><span class="sm">${L.d60s}</span>`,itcD=`<span class="big">${L.itc(itcN)}</span><span class="sm">${L.itcs}</span>`;
