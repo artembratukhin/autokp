@@ -347,7 +347,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b> <span style="opacity:.55">· версия 2026-11-17 13-25</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b> <span style="opacity:.55">· версия 2026-11-17 13-35</span></p>
   </header>
 
   <div class="side">
@@ -757,7 +757,7 @@ async function loadLive(){
     const mm=String(((await get("'Справочник'!Q2"))[0]||[])[0]||"").match(/(\d{2})\.(\d{4})$/);
     const month=mm?`${mm[1]}.${mm[2]}`:"11.2026";
     {const MN=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],[mo,yr]=month.split(".");
-     $("priceMonth").textContent=(MN[+mo-1]||month)+" "+(yr||"")}
+     $("priceMonth").textContent="Прайс на "+(MN[+mo-1]||month).toLowerCase()+" "+(yr||"")}
     // все листы — одним обращением к серверу (см. batcher)
     const [prices,aqua,fc,villas,sky,utp,riv,gl,dir]=await Promise.all([
       get("'Цены'!A2:BO3000"),get(`'src_Aqua ${month}'!C2:AE1500`),get(`'src_Family_Club ${month}'!C2:AE1500`),
