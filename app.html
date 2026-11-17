@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 17-40</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 18-30</span></p>
   </header>
 
   <div class="side">
@@ -542,7 +542,7 @@ const T={
   resale:"Доход от перепродажи",hotel:"Доход от отельного управления в год",gdHotel:"Гарантированный доход от отельного управления в год",gdYear:"Гарантированный доход в год",
   gdDuring:"Гарантированный доход на период рассрочки",gdAfter:"Гарантированный доход после полной выплаты",days:"Дни отдыха",
   d60:"60 дней",d60s:"Отдых в отельном номере<br>(могут быть обменены по программе RCI)",itc:n=>`${n} ${plural(n,"день","дня","дней")}`,itcs:"Отдых по программе ITC",
-  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,pv:p=>`Первый взнос — ${p}%`,monthly:"Ежемесячный платёж",
+  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${p}%`,monthly:"Ежемесячный платёж",
   pmTitle:"Условия покупки",pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
@@ -555,7 +555,7 @@ const T={
   resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income annual",
   gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
   d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",itc:n=>`${n} days`,itcs:"ITC program vacation",
-  inst:m=>`Installment ${m} months`,pv:p=>`First installment ${p}%`,monthly:"Monthly payment",
+  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${p}%`,monthly:"Monthly payment",
   pmTitle:"Terms of purchase",pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
@@ -911,6 +911,8 @@ function calcInto(el){
   const hasDisc=benefit>0,discPct=price?benefit/price*100:0;
   const months=Math.max(1,num("months")),pv=eff*pvp/100,monthly=(eff-pv)/months;
   const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
+  // рассрочка без первого взноса: ПВ не выводим, ГД на период рассрочки (от ПВ) нет — золотой становится ГД после выплаты
+  const noPv=inst&&!promo&&pvp<=0;
   // левая панель
   const isVilla=obj==="villas",isRiv=obj==="riviera",isSky=obj==="sky",cat=$("cat").value||"—",shLbl=SHARE_LBL[$("share").value]||"";
   const areaTxt=String($("area").value).replace(/[.,]/,l==="ru"?",":".");
@@ -925,13 +927,15 @@ function calcInto(el){
   else if(!isVilla&&!isRiv){sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`)}
   const bottom=promo
    ?`<div class="inst pminst">${card(L.pmTitle,`<div class="pmrow"><b>${pvp}%</b>${pmIcon(pvp)}<b>${100-pvp}%</b><i></i><span>${L.pmNow(pvp)},<br>${L.pmLater(100-pvp,months)}</span></div>`)}</div>`
+   :noPv
+   ?`<div class="inst">${card(L.inst(months),`<div><span>${eur(monthly)}</span><span class="sm">${L.equal(months)}</span></div>`)}</div>`
    :inst
    ?`<div class="inst">${card(L.inst(months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${L.monthly}</span>`))}</div>`
    :`<div class="terms"><span>${L.terms}</span><b>${L.full}</b></div>`;
 
   // правая колонка: какие карточки и что золотое — решает шаблон
   const items=[];let gold=0;
-  if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(st.discUnit==="pct"?pct(dv,l):discPct>=2?pct(discPct,l):""),eur(benefit))}</div>`});gold++}
+  if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(st.discUnit==="pct"?pct(dv,l):Math.round(discPct*10)/10>=2?pct(discPct,l):""),eur(benefit))}</div>`});gold++}
   const curH=shLbl?L.currentShare(shLbl,obj):L.current;
   if(isSky){items.push({h:134,html:`<div class="row">${card(curH,eur(price),{gold:!hasDisc})}${card(L.growth,L.growthV)}</div>`})}
   else{
@@ -943,6 +947,8 @@ function calcInto(el){
   if(inst&&!boost){
     items.push({h:134,html:card(L.hotel,split(eur(hotel),pct(price?hotel/price*100:0,l)))});
     items.push({h:134,html:card(hasDisc?L.gdYear:L.gdHotel,split(eur(eff*num("gdinst")/100),pct(num("gdinst"),l)))});
+  }else if(boost&&noPv){
+    items.push({h:134,html:card(L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)),{gold:true})});gold++;
   }else if(boost){
     items.push({h:134,html:card(promo?L.gdDuringY:L.gdDuring,split(eur(pv*num("gdboost")/100),pct(num("gdboost"),l)),{gold:true})});gold++;
     items.push({h:134,html:card(promo?L.gdAfterY:L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)))});
@@ -1091,7 +1097,7 @@ function summaryInto(el,Ms,L){
   const hasDisc=ben>0,anySky=Ms.some(m=>m.obj==="sky"),allFin=Ms.every(m=>m.fin>0);
   const kinds=new Set(Ms.map(m=>m.inst?(m.boost?"boost":"std"):"full"));
   const items=[];let gold=0;const P=(a,b)=>pct(b?a/b*100:0,l);
-  if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(price&&ben/price*100>=2?P(ben,price):""),eur(ben))}</div>`});gold++}
+  if(hasDisc){items.push({h:134,html:`<div class="row">${card(L.special,eur(eff),{gold:true})}${card(L.benefit(price&&Math.round(ben/price*1000)/10>=2?P(ben,price):""),eur(ben))}</div>`});gold++}
   const cur=card(L.current,eur(price),{gold:!hasDisc});if(!hasDisc)gold++;
   if(anySky)items.push({h:134,html:cur}); // есть Sky Castle — без «Роста стоимости в год», цена на всю ширину
   else if(allFin){
@@ -1101,6 +1107,8 @@ function summaryInto(el,Ms,L){
   if(kinds.size===1&&kinds.has("std")){
     if(hotel>0)items.push({h:134,html:card(L.hotel,split(eur(hotel),P(hotel,price)))});
     items.push({h:134,html:card(hasDisc?L.gdYear:L.gdHotel,split(eur(S("gdStd")),P(S("gdStd"),eff)))});
+  }else if(kinds.size===1&&kinds.has("boost")&&S("gdBoost")<=0){ // все без первого взноса — ГД только после выплаты, золотой
+    items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)),{gold:true})});gold++;
   }else if(kinds.size===1&&kinds.has("boost")){
     items.push({h:134,html:card(L.gdDuring,split(eur(S("gdBoost")),P(S("gdBoost"),pv)),{gold:true})});gold++;
     items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)))});
@@ -1115,6 +1123,7 @@ function summaryInto(el,Ms,L){
   if(rciT>0||itcS>0)items.push({h:163,html:card(L.days,rciT>0&&itcS>0?split(rciS,itcSS):`<div>${rciT>0?rciS:itcSS}</div>`,{cls:"days"})});
   const sameInst=Ms.every(m=>m.inst&&m.months===Ms[0].months&&m.pvp===Ms[0].pvp);
   if(sameInst&&Ms.every(m=>m.promo))items.push({h:150,html:card(L.pmTitle,split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(eff-pv)}</span><span class="sm">${L.pmCardRest(100-Ms[0].pvp,Ms[0].months)}</span>`),{cls:"instc"})});
+  else if(sameInst&&Ms[0].pvp<=0)items.push({h:150,html:card(L.inst(Ms[0].months),`<div><span>${eur(monthly)}</span><span class="sm">${L.equal(Ms[0].months)}</span></div>`,{cls:"instc"})});
   else if(sameInst)items.push({h:150,html:card(L.inst(Ms[0].months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${L.monthly}</span>`),{cls:"instc"})});
   const dl=fmtDate($("deadline").value),badge=!!dl&&items.length<=6;
   if(badge){items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1756,47)}<span>${L.untilLine(dl)}</span></div>`});gold++}
