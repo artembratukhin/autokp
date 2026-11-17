@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-20</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-40</span></p>
   </header>
 
   <div class="side">
@@ -412,6 +412,8 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
       <label>На окончание, € <input id="final" data-auto inputmode="numeric"></label>
       <label>Участок, м² <input id="plot" data-auto inputmode="decimal"></label>
       <label><span class="lbl" title="Доход от отельного управления в год">Доход упр. в год, €</span> <input id="hotel" data-auto inputmode="numeric"></label>
+      <label>Дни в номере (RCI) <input id="rci" value="60" inputmode="numeric" title="0 или пусто — блок не выводится"></label>
+      <label>Дни ITC <input id="itc" value="7" inputmode="numeric" title="0 или пусто — блок ITC не выводится"></label>
     </fieldset>
 
     <fieldset>
@@ -437,8 +439,6 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
       <label class="inst-only std-only">ГД при рассрочке, % <input id="gdinst" value="5" inputmode="decimal"></label>
       <label class="inst-only boost-only">ГД на период рассрочки, % <input id="gdboost" value="7" inputmode="decimal"></label>
       <label>ГД после оплаты, % <input id="gdfull" value="10" inputmode="decimal"></label>
-      <label style="grid-column:1">Дни в номере (RCI) <input id="rci" value="60" inputmode="numeric" title="0 или пусто — блок не выводится"></label>
-      <label>Дни ITC <input id="itc" value="7" inputmode="numeric" title="0 или пусто — блок ITC не выводится"></label>
       <div class="full mbox" id="promoBox">
         <label class="check"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»: первый взнос сейчас, остаток через срок рассрочки — без ежемесячных платежей</label>
         <p class="hint">Срок по умолчанию: части — 6 месяцев, целые юниты — 13. Можно поменять в поле «Срок, мес».</p>
