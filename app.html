@@ -315,7 +315,8 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 .big{font-size:50px}
 .sm{font-size:18px;margin-top:6px;line-height:1.2;opacity:.9;white-space:normal}
 .inst .card{height:150px}
-.calcbadge.lbadge{width:100%;margin-top:22px;font-size:22px;white-space:nowrap}
+.calcbadge.lbadge{width:100%;margin-top:22px;font-size:22px;white-space:nowrap;padding:0 26px;box-sizing:border-box}
+.calcslide.gl .calcbadge.lbadge{font-size:20px;letter-spacing:.01em}
 .calcbadge{height:47px;display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
 /* ---------- выгрузка PDF ---------- */
 #printRoot{display:none}
@@ -347,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-10</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-20</span></p>
   </header>
 
   <div class="side">
@@ -958,6 +959,9 @@ function calcInto(el){
    <div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>`;
 
   el.classList.toggle("sky",obj==="sky");el.classList.toggle("gl",obj==="gl");
+  // плашка срока: текст не должен упираться в края (у Grand Life шрифт шире) — уменьшаем, пока не влезет
+  {const b=el.querySelector(".lbadge"),sp=b&&b.querySelector("span");
+   if(sp){let fs=parseFloat(getComputedStyle(b).fontSize);while(sp.scrollWidth>b.clientWidth-52&&fs>15){fs-=.5;sp.style.fontSize=fs+"px"}}}
   return{gold,badgeFits,dl,m:{obj,price,eff,benefit,hasDisc,fin,resale,hotel,inst,boost,months,pvp,pv,monthly,
     gdStd:eff*num("gdinst")/100,gdBoost:pv*num("gdboost")/100,gdFull:eff*num("gdfull")/100,itc:num("itc"),rci:num("rci"),promo}};
 }
