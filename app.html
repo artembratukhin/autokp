@@ -347,7 +347,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b> <span style="opacity:.55">· версия 2026-11-17 13-12</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b> <span style="opacity:.55">· версия 2026-11-17 13-18</span></p>
   </header>
 
   <div class="side">
@@ -1146,7 +1146,7 @@ function multiCover(objs,L,dl){
 /* Где на фото обложки главный объект (доля ширины слева). Sky Castle стоит в правой трети.
    В узкой плитке кадрируем так, чтобы эта точка была по центру плитки (насколько позволяет фото). */
 const COVER_FOCUS={sky:.83}; // Sky_Castle_Cover: широкая панель (2 объекта) — у правого края; узкая (3 объекта) — подобрано по обложке
-const COVER_FOCUS_NARROW={sky:.66};
+const COVER_FOCUS_NARROW={sky:.735};
 function focusCovers(){
   $("s1").querySelectorAll(".bg[data-f]").forEach(el=>{
     const W0=parseFloat(el.parentElement.style.width),o=Object.keys(COVER_FOCUS).find(k=>COVER_FOCUS[k]==+el.dataset.f);
