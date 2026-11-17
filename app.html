@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 15-50</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 17-40</span></p>
   </header>
 
   <div class="side">
@@ -705,10 +705,9 @@ function fitReasons(){
   });
 }
 function interiorsSlide(){
-  /* У Sky Castle слайда с интерьерами нет: КП из 4 слайдов */
-  const noInt=$("obj").value==="sky";
-  $("intWrap").hidden=noInt;
-  if(noInt)return;
+  /* Интерьеры есть у всех объектов, включая Sky Castle (папка — строка «Интерьеры | Sky Castle» в настройках).
+     Нет картинки — слайд бледный с пометкой «Не войдёт в КП» и в PDF не попадает */
+  $("intWrap").hidden=false;
   const obj=$("obj").value,cat=esc($("cat").value||"юнита"),en=st.lang==="en";
   const map=obj==="villas"||obj==="riviera";
   const cap=$("intCap");
