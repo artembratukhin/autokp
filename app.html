@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-17 18-40</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-18 12-10</span></p>
   </header>
 
   <div class="side">
@@ -430,7 +430,12 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
         </span></span></label>
       <label class="full">Условия действуют до <input id="deadline" type="date"></label>
       <label class="inst-only">Срок, мес <input id="months" value="42" inputmode="numeric"></label>
-      <label class="inst-only">Первый взнос, % <input id="pv" value="30" inputmode="decimal"></label>
+      <label class="inst-only">Первый взнос
+        <span class="withseg"><input id="pv" value="30" inputmode="decimal" aria-label="Первый взнос">
+        <span class="seg" role="group" aria-label="Первый взнос в" id="pvSeg">
+          <button type="button" data-k="pvUnit" data-v="pct" aria-pressed="true">%</button>
+          <button type="button" data-k="pvUnit" data-v="eur" aria-pressed="false">€</button>
+        </span></span></label>
       <label class="full inst-only">Гарантированный доход
         <select id="gdmode">
           <option value="std">Стандарт: доход от управления + ГД</option>
@@ -542,7 +547,7 @@ const T={
   resale:"Доход от перепродажи",hotel:"Доход от отельного управления в год",gdHotel:"Гарантированный доход от отельного управления в год",gdYear:"Гарантированный доход в год",
   gdDuring:"Гарантированный доход на период рассрочки",gdAfter:"Гарантированный доход после полной оплаты",days:"Дни отдыха",
   d60:"60 дней",d60s:"Отдых в отельном номере<br>(могут быть обменены по программе RCI)",itc:n=>`${n} ${plural(n,"день","дня","дней")}`,itcs:"Отдых по программе ITC",
-  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${p}%`,monthly:"Ежемесячный платёж",
+  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${String(Math.round(p*10)/10).replace(".",",")}%`,monthly:"Ежемесячный платёж",
   pmTitle:"Условия покупки",pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
@@ -555,7 +560,7 @@ const T={
   resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income annual",
   gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
   d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",itc:n=>`${n} days`,itcs:"ITC program vacation",
-  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${p}%`,monthly:"Monthly payment",
+  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p*10)/10}%`,monthly:"Monthly payment",
   pmTitle:"Terms of purchase",pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
@@ -563,9 +568,15 @@ const T={
   terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,
   plan:"Floor plan",planS:"will be pulled from Drive",cover:"Cover photo — will be pulled from Drive"}
 };
-const st={lang:"ru",pay:"inst",font:"o",discUnit:"pct",mode:"one",proj:"wgbg"};
+const st={lang:"ru",pay:"inst",font:"o",discUnit:"pct",pvUnit:"pct",mode:"one",proj:"wgbg"};
 const $=id=>document.getElementById(id);
 function plural(n,a,b,c){n=Math.abs(n)%100;const d=n%10;if(n>10&&n<20)return c;if(d>1&&d<5)return b;if(d==1)return a;return c}
+/* Первый взнос: в % или в € (акция «Кредитные каникулы» — всегда в %). Возвращает {pv: сумма, pvp: процент} */
+function pvOf(eff,promo){
+  const v=num("pv");
+  if(st.pvUnit==="eur"&&!promo){const pv=Math.min(Math.max(0,v),Math.max(0,eff));return{pv,pvp:eff>0?pv/eff*100:0}}
+  return{pv:eff*v/100,pvp:v};
+}
 const num=id=>{const v=parseFloat(String($(id).value).replace(/[\s€]/g,"").replace(",","."));return isFinite(v)?v:0};
 const eur=v=>"€"+Math.round(v).toLocaleString("ru-RU").replace(/ /g," ");
 const pct=(v,l)=>{const r=Math.round(v*10)/10;let s=Number.isInteger(r)?String(r):r.toFixed(1);if(l==="ru")s=s.replace(".",",");return s+"%"};
@@ -904,15 +915,16 @@ function calcInto(el){
   const L=T[st.lang],l=st.lang,obj=$("obj").value;
   let price=num("price");const fin=num("final"),dv=num("disc");
   const inst=st.pay==="inst",promo=inst&&$("promo").checked&&obj!=="gl",boost=inst&&($("gdmode").value==="boost"||promo);
-  const pvp=num("pv");
+  let pvp=num("pv");
   let benefit=st.discUnit==="pct"?price*dv/100:dv, eff=price-benefit;
   // акция: «первый взнос + остаток» на слайдах должны сходиться со стоимостью до евро — при расхождении из-за округления стоимость поднимаем
   if(promo){const adj=Math.round(eff*pvp/100)+Math.round(eff-eff*pvp/100)-Math.round(eff);if(adj){eff+=adj;if(benefit>0)benefit-=adj;else price+=adj}}
   const hasDisc=benefit>0,discPct=price?benefit/price*100:0;
-  const months=Math.max(1,num("months")),pv=eff*pvp/100,monthly=(eff-pv)/months;
+  const _pv=pvOf(eff,promo);pvp=_pv.pvp;
+  const months=Math.max(1,num("months")),pv=_pv.pv,monthly=(eff-pv)/months;
   const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
   // рассрочка без первого взноса: ПВ не выводим, ГД на период рассрочки (от ПВ) нет — золотой становится ГД после выплаты
-  const noPv=inst&&!promo&&pvp<=0;
+  const noPv=inst&&!promo&&pv<0.5;
   // левая панель
   const isVilla=obj==="villas",isRiv=obj==="riviera",isSky=obj==="sky",cat=$("cat").value||"—",shLbl=SHARE_LBL[$("share").value]||"";
   const areaTxt=String($("area").value).replace(/[.,]/,l==="ru"?",":".");
@@ -984,11 +996,12 @@ function render(){
   const price=num("price"),fin=num("final"),dv=num("disc");
   const benefit=st.discUnit==="pct"?price*dv/100:dv, eff=price-benefit, hasDisc=benefit>0;
   const discPct=price?benefit/price*100:0;
-  const months=Math.max(1,num("months")),pvp=num("pv"),pv=eff*pvp/100,monthly=(eff-pv)/months;
+  const promoOn=st.pay==="inst"&&$("promo").checked&&$("obj").value!=="gl",{pv,pvp}=pvOf(eff,promoOn),months=Math.max(1,num("months")),monthly=(eff-pv)/months;
   const inst=st.pay==="inst",promo=inst&&$("promo").checked&&obj!=="gl",boost=inst&&($("gdmode").value==="boost"||promo);
   const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
   document.querySelectorAll(".inst-only").forEach(e=>e.hidden=!inst);
   $("promoBox").hidden=!inst||st.proj==="gl";
+  $("pvSeg").hidden=inst&&$("promo").checked&&st.proj!=="gl"; // акция — первый взнос только в %
   document.querySelectorAll(".std-only").forEach(e=>e.hidden=!inst||boost);
   document.querySelectorAll(".boost-only").forEach(e=>e.hidden=!boost);
   document.body.classList.toggle("fonts-manrope",st.font==="m");document.body.classList.toggle("fonts-analog",st.font==="a");
@@ -1026,9 +1039,9 @@ const ITEM_IDS=["obj","share","unit","manual","cat","area","room","floor","price
 let KP=[],CUR=0;
 const allSky=()=>st.mode==="multi"&&KP.length?KP.every(k=>k.obj==="sky"):$("obj").value==="sky";
 const kpObj=()=>st.mode==="multi"&&KP.length?(KP.every(k=>k.obj===KP[0].obj)?KP[0].obj:null):$("obj").value;
-function snap(){const o={pay:st.pay,discUnit:st.discUnit};ITEM_IDS.forEach(id=>{const e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
+function snap(){const o={pay:st.pay,discUnit:st.discUnit,pvUnit:st.pvUnit};ITEM_IDS.forEach(id=>{const e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function putSnap(o){
-  st.pay=o.pay;st.discUnit=o.discUnit;
+  st.pay=o.pay;st.discUnit=o.discUnit;st.pvUnit=o.pvUnit||"pct";
   ITEM_IDS.forEach(id=>{const e=$(id);if(e.type==="checkbox"){e.checked=!!o[id];return}
     if(id==="unit"&&o.unit&&![...e.options].some(x=>x.value===o.unit)){const t=document.createElement("option");t.value=o.unit;t.dataset.tmp="1";e.appendChild(t)}
     e.value=o[id]});
@@ -1243,12 +1256,16 @@ function promoSlide(){
 }
 $("promoPv").addEventListener("change",()=>{$("pv").value=$("promoPv").value;render()});
 $("promo").addEventListener("change",()=>{$("promoPvBox").hidden=!$("promo").checked;
-  if($("promo").checked){$("months").value=$("share").value==="1000"?13:6;$("pv").value=$("promoPv").value;$("gdmode").value="boost";if(!num("gdboost"))$("gdboost").value=7}
+  if($("promo").checked){st.pvUnit="pct";syncSeg();$("months").value=$("share").value==="1000"?13:6;$("pv").value=$("promoPv").value;$("gdmode").value="boost";if(!num("gdboost"))$("gdboost").value=7}
   document.querySelectorAll(".boost-only").forEach(e=>e.hidden=$("gdmode").value!=="boost");render()});
 function fit(){document.querySelectorAll(".frame").forEach(fr=>{fr.firstElementChild.style.transform=`scale(${fr.clientWidth/1920})`})}
 new ResizeObserver(fit).observe(document.querySelector(".preview"));
 
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  if(b.dataset.k==="pvUnit"&&st.pvUnit!==b.dataset.v){ // пересчитать введённое значение в новые единицы
+    const pr=num("price"),d=num("disc"),eff=pr-(st.discUnit==="pct"?pr*d/100:d),v=num("pv");
+    if(eff>0)$("pv").value=b.dataset.v==="eur"?String(Math.round(eff*v/100)):String(Math.round(v/eff*1000)/10);
+  }
   st[b.dataset.k]=b.dataset.v;
   b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
   if(b.dataset.k==="mode")setMode(b.dataset.v);else if(b.dataset.k==="proj")setProj(b.dataset.v);else render();}));
@@ -1518,7 +1535,7 @@ function kpName(){
   const LAT={А:"A",В:"B",Б:"B",С:"C",Е:"E",Н:"H",К:"K",М:"M",О:"O",Р:"P",Т:"T",Х:"X",а:"a",в:"b",с:"c",е:"e",о:"o",р:"p",х:"x"};
   const lat=v=>String(v||"").trim().replace(/[А-яЁё]/g,c=>LAT[c]||"").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ");
   const part=o=>{const sh={"500":"1-2","250":"1-4","125":"1-8"}[o.share];
-    return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(Math.round(toNum(o.pv))||0)+"%":"fix"].filter(Boolean).join("_")};
+    return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(()=>{let v=toNum(o.pv);if(o.pvUnit==="eur"&&!o.promo){const pr=toNum(o.price),d=toNum(o.disc),e=pr-(o.discUnit==="pct"?pr*d/100:d);v=e>0?v/e*100:0}return(Math.round(v)||0)+"%"})():"fix"].filter(Boolean).join("_")};
   const l=st.lang;
   if(st.mode==="multi"&&KP.length>1){
     KP[CUR]=snap();
@@ -1536,7 +1553,7 @@ function checkReady(){
 function logKp(mode){
   const d={manager:$("mgr").value.trim(),object:$("obj").value,unit:$("unit").value,share:SHARE_LBL[$("share").value]||"целый",
     lang:st.lang,pay:st.pay==="inst"?"рассрочка":"100%",price:num("price"),discount:$("disc").value+(st.discUnit==="pct"?"%":"€"),
-    months:st.pay==="inst"?num("months"):"",pv:st.pay==="inst"?num("pv"):"",gd:$("gdmode").value,deadline:$("deadline").value,
+    months:st.pay==="inst"?num("months"):"",pv:st.pay==="inst"?(st.pvUnit==="eur"&&!$("promo").checked?"€"+num("pv"):num("pv")+"%"):"",gd:$("gdmode").value,deadline:$("deadline").value,
     manual:$("manual").checked,headline:$("headline").selectedOptions[0].text,slides:includedSlides().length,mode};
   if(st.mode==="multi"&&KP.length>1){d.object="сборное: "+[...new Set(KP.map(k=>NAME_IN_PRICES[k.obj]))].join(", ");
     d.unit=KP.map(k=>NAME_IN_PRICES[k.obj]+" "+(k.unit||k.room)+(SHARE_LBL[k.share]?" "+SHARE_LBL[k.share]:"")).join("; ");d.share="";
