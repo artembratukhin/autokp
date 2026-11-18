@@ -348,7 +348,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-18 12-10</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-18 12-25</span></p>
   </header>
 
   <div class="side">
@@ -547,7 +547,7 @@ const T={
   resale:"Доход от перепродажи",hotel:"Доход от отельного управления в год",gdHotel:"Гарантированный доход от отельного управления в год",gdYear:"Гарантированный доход в год",
   gdDuring:"Гарантированный доход на период рассрочки",gdAfter:"Гарантированный доход после полной оплаты",days:"Дни отдыха",
   d60:"60 дней",d60s:"Отдых в отельном номере<br>(могут быть обменены по программе RCI)",itc:n=>`${n} ${plural(n,"день","дня","дней")}`,itcs:"Отдых по программе ITC",
-  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${String(Math.round(p*10)/10).replace(".",",")}%`,monthly:"Ежемесячный платёж",
+  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${Math.round(p)}%`,monthly:"Ежемесячный платёж",
   pmTitle:"Условия покупки",pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
@@ -560,7 +560,7 @@ const T={
   resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income annual",
   gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
   d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",itc:n=>`${n} days`,itcs:"ITC program vacation",
-  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p*10)/10}%`,monthly:"Monthly payment",
+  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p)}%`,monthly:"Monthly payment",
   pmTitle:"Terms of purchase",pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
@@ -887,6 +887,12 @@ function stdGdFull(){
   const v=d&&d.gd?+d.gd:(u&&u.gd?Math.round(u.gd*10)/10:null);
   return v>0?v:null;
 }
+/* Стандартный ГД на период рассрочки — из «Справочника» (столбец «ГД рассрочка»), иначе 5% */
+function stdGdInst(){
+  const o=$("obj").value,u=(UNITS[o]||[]).find(x=>x.id===$("unit").value),sh=$("share").value;
+  const d=DIR[((o==="gl"?(u?"grand life "+(u.block||String(u.id).slice(-1)):""):NAME_IN_PRICES[o])||"").toLowerCase()+"|"+sh];
+  return d&&d.gdinst>0?+d.gdinst:5;
+}
 let shareNote="";
 function applyUnit(){
   const list=UNITS[$("obj").value]||[],u=list.find(x=>x.id===$("unit").value);
@@ -962,8 +968,10 @@ function calcInto(el){
   }else if(boost&&noPv){
     items.push({h:134,html:card(L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)),{gold:true})});gold++;
   }else if(boost){
-    items.push({h:134,html:card(promo?L.gdDuringY:L.gdDuring,split(eur(pv*num("gdboost")/100),pct(num("gdboost"),l)),{gold:true})});gold++;
-    items.push({h:134,html:card(promo?L.gdAfterY:L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)))});
+    // ГД на период рассрочки стандартный (не выше «Справочника») — выгода в ГД после оплаты, золотым выделяем его
+    const plain=!promo&&num("gdboost")<=stdGdInst()+1e-9;
+    items.push({h:134,html:card(promo?L.gdDuringY:L.gdDuring,split(eur(pv*num("gdboost")/100),pct(num("gdboost"),l)),{gold:!plain})});
+    items.push({h:134,html:card(promo?L.gdAfterY:L.gdAfter,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)),{gold:plain})});gold++;
   }else{
     // ГД выше стандартного по объекту — блок золотой
     const sg=stdGdFull(),up=sg!==null&&num("gdfull")>sg+1e-9;if(up)gold++;
@@ -988,7 +996,7 @@ function calcInto(el){
   // плашка срока: текст не должен упираться в края (у Grand Life шрифт шире) — уменьшаем, пока не влезет
   {const b=el.querySelector(".lbadge"),sp=b&&b.querySelector("span");
    if(sp){let fs=parseFloat(getComputedStyle(b).fontSize);while(sp.scrollWidth>b.clientWidth-52&&fs>15){fs-=.5;sp.style.fontSize=fs+"px"}}}
-  return{gold,badgeFits,dl,m:{obj,price,eff,benefit,hasDisc,fin,resale,hotel,inst,boost,months,pvp,pv,monthly,
+  return{gold,badgeFits,dl,m:{obj,price,eff,benefit,hasDisc,fin,resale,hotel,inst,boost,months,pvp,pv,monthly,plainBoost:boost&&!promo&&num("gdboost")<=stdGdInst()+1e-9,
     gdStd:eff*num("gdinst")/100,gdBoost:pv*num("gdboost")/100,gdFull:eff*num("gdfull")/100,itc:num("itc"),rci:num("rci"),promo}};
 }
 function render(){
@@ -1123,8 +1131,9 @@ function summaryInto(el,Ms,L){
   }else if(kinds.size===1&&kinds.has("boost")&&Ms.every(m=>m.pvp<=0)){ // все без первого взноса — ГД только после выплаты, золотой
     items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)),{gold:true})});gold++;
   }else if(kinds.size===1&&kinds.has("boost")){
-    items.push({h:134,html:card(L.gdDuring,split(eur(S("gdBoost")),P(S("gdBoost"),pv)),{gold:true})});gold++;
-    items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)))});
+    const plain=Ms.every(m=>m.plainBoost);gold++;
+    items.push({h:134,html:card(L.gdDuring,split(eur(S("gdBoost")),P(S("gdBoost"),pv)),{gold:!plain})});
+    items.push({h:134,html:card(L.gdAfter,split(eur(S("gdFull")),P(S("gdFull"),eff)),{gold:plain})});
   }else if(kinds.size===1){
     items.push({h:134,html:card(L.gdYear,split(eur(S("gdFull")),P(S("gdFull"),eff)))});
   }else{
