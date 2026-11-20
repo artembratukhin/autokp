@@ -350,7 +350,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-20 11-30</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-20 12-15</span></p>
   </header>
 
   <div class="side">
@@ -718,20 +718,19 @@ function fitReasons(){
     while(c.scrollHeight>c.clientHeight+1&&ps>17){ps-=.5;p.style.fontSize=ps+"px"}
   });
 }
-function interiorsSlide(){
-  /* Интерьеры есть у всех объектов, включая Sky Castle (папка — строка «Интерьеры | Sky Castle» в настройках).
-     Нет картинки — слайд бледный с пометкой «Не войдёт в КП» и в PDF не попадает */
-  $("intWrap").hidden=false;
+function interiorsSlide(){interiorsInto($("s4"),$("intCap"),$("intWrap"))}
+/* Слайд с интерьером юнита (текущий юнит формы). Нет картинки — бледный, «Не войдёт в КП».
+   Возвращает файл интерьера (для сборного КП — чтобы не повторять один и тот же интерьер) */
+function interiorsInto(slide,cap,wrap){
+  wrap.hidden=false;
   const obj=$("obj").value,cat=esc($("cat").value||"юнита"),en=st.lang==="en";
-  const map=obj==="villas"||obj==="riviera";
-  const cap=$("intCap");
   /* Интерьеры — одна картинка на весь слайд, файл по категории: «Aqua - Superior Interior», «Aqua - Luxe and Deluxe Interior» */
   const f=interiorFileFor(obj);
-  $("s4").classList.toggle("full",!!(f&&INT_IMG[f.id]));
+  slide.classList.toggle("full",!!(f&&INT_IMG[f.id]));
   if(f&&INT_IMG[f.id]){
-    // Sky Castle: тёмный градиент в правом нижнем углу и сноска о визуализациях
-    const disc=obj==="sky"?`<div class="vizgrad"></div><p class="viznote">${(en?["All images are computer-generated visualisations for","illustrative purposes only. They are intended to give","a general impression of the project and do not represent","the final appearance of the property."]:["Все изображения являются компьютерными","визуализациями и носят исключительно иллюстративный","характер. Они дают общее представление о проекте","и не отражают окончательный внешний вид объекта."]).join("<br>")}</p>`:"";
-    $("s4").innerHTML=`<img class="photo" src="${INT_IMG[f.id]}" alt="">${disc}`;cap.textContent=f.title;setSkip("intWrap","");return}
+    // Sky Castle: тёмный градиент в правом нижнем углу, сноска о визуализациях и логотип объекта (в картинках его нет)
+    const disc=obj==="sky"?`<div class="vizgrad"></div><p class="viznote">${(en?["All images are computer-generated visualisations for","illustrative purposes only. They are intended to give","a general impression of the project and do not represent","the final appearance of the property."]:["Все изображения являются компьютерными","визуализациями и носят исключительно иллюстративный","характер. Они дают общее представление о проекте","и не отражают окончательный внешний вид объекта."]).join("<br>")}</p>${logo()}`:"";
+    slide.innerHTML=`<img class="photo" src="${INT_IMG[f.id]}" alt="">${disc}`;cap.textContent=f.title;setSkipEl(wrap,"");return f}
   let note=en?"will be pulled from Drive":"подтянется с Диска";
   let loading=false;
   if(f){ensureInterior(f);loading=!INT_STATE[f.id]||INT_STATE[f.id]==="loading";note=loading?"загружаю с Диска…":INT_STATE[f.id]}
@@ -739,9 +738,10 @@ function interiorsSlide(){
   else if(PLAN_MCP&&INT_FOLDERS[obj])loading=true;
   else note=INT_FOLDERS[obj]?"нет доступа к Диску":"папка с интерьерами не подключена";
   const cell=i=>`<div class="ph"><div>${en?"Interior":"Интерьер"} ${cat} · ${i}<small>${esc(note)}</small></div></div>`;
-  $("s4").innerHTML=[1,2,3,4].map(cell).join("");
+  slide.innerHTML=[1,2,3,4].map(cell).join("")+logo();
   cap.textContent="";
-  setSkip("intWrap",loading?"":note);
+  setSkipEl(wrap,loading?"":note);
+  return f;
 }
 function logo(o){if(o===undefined)o=$("obj").value;if(o==="gl")return`<img class="glflag" src="${LOGO.whflag}" alt="WorldHotels Luxury" width="160" height="168">`;return`<div class="logo">${WG_MARK}<div class="wg"><b>WYNDHAM GRAND</b><small>BATUMI GONIO</small></div>${o?`<i></i><div class="obj">${OBJ[o]}</div>`:""}</div>`}
 function card(h,body,opts={}){return`<div class="card${opts.gold?" gold":""}${opts.cls?" "+opts.cls:""}"><div class="h"><span>${h}</span></div><div class="b${body.includes("<i>")?" split":""}">${body}</div></div>`}
@@ -1106,13 +1106,17 @@ function renderMulti(L){
   const isMap=o=>o.obj==="villas"||o.obj==="riviera";
   host.innerHTML=KP.map((o,i)=>`<div class="sw" data-title="Расчёт · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide"></div></div></div>`).join("")+
     `<div class="sw" data-title="Итого по КП"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide summary"></div></div></div>`+
-    KP.map(o=>isMap(o)?`<div class="sw" data-title="Генплан · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||""))}"><p class="cap"><span class="num"></span><span class="mc"></span></p><div class="frame"><div class="slide mapslide"></div></div></div>`:"").join("");
-  const ws=[...host.children],Ms=[];let w=KP.length+1;
+    KP.map(o=>(isMap(o)?`<div class="sw" data-title="Генплан · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||""))}"><p class="cap"><span class="num"></span><span class="mc"></span></p><div class="frame"><div class="slide mapslide"></div></div></div>`:"")+
+      `<div class="sw" data-title="Интерьер · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="ic"></span></p><div class="frame"><div class="slide interiors"></div></div></div>`).join("");
+  const ws=[...host.children],Ms=[],seenInt=new Set();let w=KP.length+1;
   KP.forEach((o,i)=>{
-    const cw=ws[i],mw=isMap(o)?ws[w++]:null;
+    const cw=ws[i],mw=isMap(o)?ws[w++]:null,iw=ws[w++];
     withItem(o,()=>{
       const r=calcInto(cw.querySelector(".slide"));Ms.push(r.m);
       if(mw)mapInto(mw.querySelector(".slide"),mw.querySelector(".mc"),mw);
+      const f=interiorsInto(iw.querySelector(".slide"),iw.querySelector(".ic"),iw);
+      if(f&&seenInt.has(f.id))iw.hidden=true; // тот же интерьер уже есть в КП (юниты одной категории) — не повторяем
+      else if(f)seenInt.add(f.id);
     });
   });
   const sw=ws[KP.length],g=summaryInto(sw.querySelector(".slide"),Ms,L);
