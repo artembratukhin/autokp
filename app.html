@@ -350,7 +350,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-18 14-10</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-20 11-30</span></p>
   </header>
 
   <div class="side">
@@ -1383,10 +1383,15 @@ function unitsFromPlanName(title){
   const suf=(toks.map(x=>(x.match(/[AB]$/)||[])[0]).find(Boolean))||"";
   return toks.map(x=>/[AB]$/.test(x)?x:x+(suf||pre));
 }
+/* Sky Castle: сначала «3D планировки» (строка «Планировки | Sky Castle 3D» в настройках), нет файла для юнита — векторная */
 function planFileFor(obj){
-  const files=PLAN_FILES[obj];if(!files)return null;
+  if(obj==="sky"&&PLAN_FILES.sky3d){const f=planFileIn("sky",PLAN_FILES.sky3d,false);if(f)return f}
+  return planFileIn(obj,PLAN_FILES[obj],true);
+}
+function planFileIn(obj,files,single){
+  if(!files)return null;
   const imgs=files.filter(f=>String(f.mimeType||"image/").startsWith("image/"));
-  if(imgs.length===1)return imgs[0]; // одна планировка на все юниты объекта
+  if(single&&imgs.length===1)return imgs[0]; // одна планировка на все юниты объекта
   const id=$("unit").value,room=String($("room").value||"").trim(),floor=String($("floor").value||"").trim();
   if(obj!=="aqua"&&id){
     const want=id.replace(/А/g,"A").replace(/В/g,"B").replace(/\s/g,"").toUpperCase();
