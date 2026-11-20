@@ -350,7 +350,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-20 12-15</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-20 12-25</span></p>
   </header>
 
   <div class="side">
@@ -728,9 +728,9 @@ function interiorsInto(slide,cap,wrap){
   const f=interiorFileFor(obj);
   slide.classList.toggle("full",!!(f&&INT_IMG[f.id]));
   if(f&&INT_IMG[f.id]){
-    // Sky Castle: тёмный градиент в правом нижнем углу, сноска о визуализациях и логотип объекта (в картинках его нет)
-    const disc=obj==="sky"?`<div class="vizgrad"></div><p class="viznote">${(en?["All images are computer-generated visualisations for","illustrative purposes only. They are intended to give","a general impression of the project and do not represent","the final appearance of the property."]:["Все изображения являются компьютерными","визуализациями и носят исключительно иллюстративный","характер. Они дают общее представление о проекте","и не отражают окончательный внешний вид объекта."]).join("<br>")}</p>${logo()}`:"";
-    slide.innerHTML=`<img class="photo" src="${INT_IMG[f.id]}" alt="">${disc}`;cap.textContent=f.title;setSkipEl(wrap,"");return f}
+    // логотип объекта сверху справа — у всех; Sky Castle — ещё тёмный градиент в правом нижнем углу и сноска о визуализациях
+    const disc=obj==="sky"?`<div class="vizgrad"></div><p class="viznote">${(en?["All images are computer-generated visualisations for","illustrative purposes only. They are intended to give","a general impression of the project and do not represent","the final appearance of the property."]:["Все изображения являются компьютерными","визуализациями и носят исключительно иллюстративный","характер. Они дают общее представление о проекте","и не отражают окончательный внешний вид объекта."]).join("<br>")}</p>`:"";
+    slide.innerHTML=`<img class="photo" src="${INT_IMG[f.id]}" alt="">${disc}${logo()}`;cap.textContent=f.title;setSkipEl(wrap,"");return f}
   let note=en?"will be pulled from Drive":"подтянется с Диска";
   let loading=false;
   if(f){ensureInterior(f);loading=!INT_STATE[f.id]||INT_STATE[f.id]==="loading";note=loading?"загружаю с Диска…":INT_STATE[f.id]}
@@ -1475,8 +1475,8 @@ function mapInto(slide,capEl,wrap){
   wrap.hidden=!on;if(!on)return;
   const id=$("unit").value,files=MAP_FILES[obj],en=st.lang==="en";
   const f=files&&id?files.find(x=>new RegExp(`(^|\\D)${id}(\\D|$)`).test(x.title)):null;
-  // картинка экспортирована из Figma целиком, вместе с логотипом — свой логотип поверх не ставим
-  if(f&&MAP_IMG[f.id]){slide.innerHTML=`<img class="photo" src="${MAP_IMG[f.id]}" alt="">`;capEl.textContent=f.title;setSkipEl(wrap,"");return}
+  // логотип объекта сверху справа — поверх картинки
+  if(f&&MAP_IMG[f.id]){slide.innerHTML=`<img class="photo" src="${MAP_IMG[f.id]}" alt="">${logo()}`;capEl.textContent=f.title;setSkipEl(wrap,"");return}
   if(f)ensureMap(f);
   const loading=f?(!MAP_STATE[f.id]||MAP_STATE[f.id]==="loading"):(!files&&PLAN_MCP&&!!MAP_FOLDERS[obj]);
   const note=f?(loading?"загружаю с Диска…":"не получилось загрузить "+f.title):
