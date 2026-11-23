@@ -336,12 +336,13 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 .canvas .rc .n{background:none!important;-webkit-text-fill-color:currentColor;color:#d4dcdf}
 .canvas .reasons.sky .rc .n{color:#d9b06a}
 @media print{
-  @page{size:1920px 1080px;margin:0}
+  @page{size:1920pt 1080pt;margin:0} /* 677×381 мм, как КП из Figma */
   html,body{margin:0!important;padding:0!important;background:#fff!important}
   :root{padding:0!important}
   body.printing .app{display:none!important}
   body.printing #printRoot{display:block}
   #printRoot .page{position:relative;width:1920px;height:1080px;overflow:hidden;break-after:page;page-break-after:always}
+#printRoot .page{zoom:1.33334}
   #printRoot .page:last-child{break-after:auto;page-break-after:auto}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
@@ -355,7 +356,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-23 18-00</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-23 19-20</span></p>
   </header>
 
   <div class="side">
@@ -1666,12 +1667,11 @@ async function imagePdf(){
       shots.push(await html2canvas(c,{scale:1.5,backgroundColor:"#ffffff",width:1920,height:1080,windowWidth:1920,windowHeight:1080,logging:false}));
       host.innerHTML="";
     }
-    let q=.86,blob;
-    for(;;){
-      const pdf=new jspdf.jsPDF({orientation:"landscape",unit:"px",format:[1920,1080],hotfixes:["px_scaling"],compress:true});
-      shots.forEach((cv,i)=>{if(i)pdf.addPage([1920,1080],"landscape");pdf.addImage(cv.toDataURL("image/jpeg",q),"JPEG",0,0,1920,1080,undefined,"FAST")});
-      blob=pdf.output("blob");if(blob.size<=PDF_LIMIT||q<=.5)break;q-=.08;
-    }
+    // Сжатие всегда одинаковое: слайд 2880×1620, JPEG 80% — стандартное КП из 5 слайдов ≈ 2 МБ.
+    // Размер страницы 1920×1080 pt = 677×381 мм — как у КП из Figma, листы вставляются в них без масштабирования.
+    const pdf=new jspdf.jsPDF({orientation:"landscape",unit:"pt",format:[1920,1080],compress:true});
+    shots.forEach((cv,i)=>{if(i)pdf.addPage([1920,1080],"landscape");pdf.addImage(cv.toDataURL("image/jpeg",.8),"JPEG",0,0,1920,1080,undefined,"FAST")});
+    const blob=pdf.output("blob");
     // iPhone/Android показывают application/pdf во вкладке даже с download — отдаём как «файл»
     const url=URL.createObjectURL(MOBILE?new Blob([blob],{type:"application/octet-stream"}):blob),name=kpName()+".pdf";
     const a=document.createElement("a");a.href=url;a.download=name;a.target="_self";document.body.appendChild(a);a.click();a.remove();
