@@ -350,7 +350,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-20 12-25</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-23 14-30</span></p>
   </header>
 
   <div class="side">
@@ -450,7 +450,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
       <div class="full mbox" id="promoBox">
         <label class="check"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»: первый взнос сейчас, остаток через срок рассрочки — без ежемесячных платежей</label>
         <p class="hint">Срок по умолчанию: части — 6 месяцев, целые юниты — 13. Можно поменять в поле «Срок, мес».</p>
-        <label id="promoPvBox" hidden>Вариант акции <select id="promoPv"><option value="50">50% сейчас / 50% позже</option><option value="70">70% сейчас / 30% позже</option></select></label>
+        <label id="promoPvBox" hidden>Вариант акции <select id="promoPv"><option value="50">50% сейчас / 50% позже</option><option value="70">70% сейчас / 30% позже</option><option value="eur">Своя сумма первого взноса, €</option></select></label>
       </div>
       <p class="hint" id="calcline" hidden></p>
       <p class="note" id="enNote" hidden></p>
@@ -577,7 +577,7 @@ function plural(n,a,b,c){n=Math.abs(n)%100;const d=n%10;if(n>10&&n<20)return c;i
 /* Первый взнос: в % или в € (акция «Кредитные каникулы» — всегда в %). Возвращает {pv: сумма, pvp: процент} */
 function pvOf(eff,promo){
   const v=num("pv");
-  if(st.pvUnit==="eur"&&!promo){const pv=Math.min(Math.max(0,v),Math.max(0,eff));return{pv,pvp:eff>0?pv/eff*100:0}}
+  if(st.pvUnit==="eur"){const pv=Math.min(Math.max(0,v),Math.max(0,eff));return{pv,pvp:eff>0?pv/eff*100:0}}
   return{pv:eff*v/100,pvp:v};
 }
 const num=id=>{const v=parseFloat(String($(id).value).replace(/[\s€]/g,"").replace(",","."));return isFinite(v)?v:0};
@@ -878,7 +878,7 @@ function fillUnitOptions(){
   $("unitCount").textContent=list.length?`${list.length} ${plural(list.length,"юнит","юнита","юнитов")}`:"";
 }
 function syncForm(){
-  $("promoPvBox").hidden=!$("promo").checked;if(["50","70"].includes(String($("pv").value)))$("promoPv").value=String($("pv").value);
+  $("promoPvBox").hidden=!$("promo").checked;if(st.pvUnit==="eur")$("promoPv").value="eur";else if(["50","70"].includes(String($("pv").value)))$("promoPv").value=String($("pv").value);
   const list=UNITS[$("obj").value]||[],u=list.find(x=>x.id===$("unit").value);
   document.querySelectorAll("[data-auto]").forEach(i=>i.readOnly=!($("manual").checked||!u));
   $("unitBox").hidden=!($("manual").checked||!u);
@@ -913,7 +913,7 @@ function applyUnit(){
     if(u.gd)$("gdfull").value=Math.round(u.gd*10)/10;
     const d=DIR[(($("obj").value==="gl"?"grand life "+(u.block||String(u.id).slice(-1)):NAME_IN_PRICES[$("obj").value])||"").toLowerCase()+"|"+sh];
     if(d){if(d.gd)$("gdfull").value=d.gd;$("rci").value=d.rci||0;$("itc").value=d.itc||0;if(d.months)$("months").value=d.months;if(d.gdinst)$("gdinst").value=d.gdinst}
-    if($("promo").checked&&$("obj").value!=="gl"){$("months").value=sh==="1000"?13:6;$("pv").value=$("promoPv").value}
+    if($("promo").checked&&$("obj").value!=="gl"){$("months").value=sh==="1000"?13:6;if($("promoPv").value!=="eur")$("pv").value=$("promoPv").value}
     if(u.hotelEst)shareNote=(shareNote?shareNote+" ":"")+"Доход от управления для этой площади в УТП нет — посчитан пропорционально ближайшей планировке.";
   }
   $("shareNote").textContent=shareNote;$("shareNote").hidden=!shareNote;
@@ -930,7 +930,8 @@ function calcInto(el){
   let pvp=num("pv");
   let benefit=st.discUnit==="pct"?price*dv/100:dv, eff=price-benefit;
   // акция: «первый взнос + остаток» на слайдах должны сходиться со стоимостью до евро — при расхождении из-за округления стоимость поднимаем
-  if(promo){const adj=Math.round(eff*pvp/100)+Math.round(eff-eff*pvp/100)-Math.round(eff);if(adj){eff+=adj;if(benefit>0)benefit-=adj;else price+=adj}}
+  if(promo&&st.pvUnit==="eur")eff=Math.round(eff);
+  else if(promo){const adj=Math.round(eff*pvp/100)+Math.round(eff-eff*pvp/100)-Math.round(eff);if(adj){eff+=adj;if(benefit>0)benefit-=adj;else price+=adj}}
   const hasDisc=benefit>0,discPct=price?benefit/price*100:0;
   const _pv=pvOf(eff,promo);pvp=_pv.pvp;
   const months=Math.max(1,num("months")),pv=_pv.pv,monthly=(eff-pv)/months;
@@ -952,7 +953,7 @@ function calcInto(el){
     sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`);sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.area} <b>${esc(areaTxt)} ${L.m2}</b>`);}
   else if(!isVilla&&!isRiv){sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`)}
   const bottom=promo
-   ?`<div class="inst pminst">${card(L.pmTitle,`<div class="pmrow"><b>${pvp}%</b>${pmIcon(pvp)}<b>${100-pvp}%</b><i></i><span>${L.pmNow(pvp)},<br>${L.pmLater(100-pvp,months)}</span></div>`)}</div>`
+   ?(q=>`<div class="inst pminst">${card(L.pmTitle,`<div class="pmrow"><b>${q}%</b>${pmIcon(q)}<b>${100-q}%</b><i></i><span>${L.pmNow(q)},<br>${L.pmLater(100-q,months)}</span></div>`)}</div>`)(Math.min(99,Math.max(1,Math.round(pvp))))
    :noPv
    ?`<div class="inst">${card(L.inst(months),`<div><span>${eur(monthly)}</span><span class="sm">${L.equal(months)}</span></div>`)}</div>`
    :inst
@@ -1017,7 +1018,6 @@ function render(){
   const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
   document.querySelectorAll(".inst-only").forEach(e=>e.hidden=!inst);
   $("promoBox").hidden=!inst||st.proj==="gl";
-  $("pvSeg").hidden=inst&&$("promo").checked&&st.proj!=="gl"; // акция — первый взнос только в %
   document.querySelectorAll(".std-only").forEach(e=>e.hidden=!inst||boost);
   document.querySelectorAll(".boost-only").forEach(e=>e.hidden=!boost||(!promo&&$("gdmode").value==="after"));
   document.body.classList.toggle("fonts-manrope",st.font==="m");document.body.classList.toggle("fonts-analog",st.font==="a");
@@ -1156,7 +1156,7 @@ function summaryInto(el,Ms,L){
   const rciS=`<span class="big">${L.itc(rciT)}</span><span class="sm">${L.d60s}</span>`,itcSS=`<span class="big">${L.itc(itcS)}</span><span class="sm">${L.itcs}</span>`;
   if(rciT>0||itcS>0)items.push({h:163,html:card(L.days,rciT>0&&itcS>0?split(rciS,itcSS):`<div>${rciT>0?rciS:itcSS}</div>`,{cls:"days"})});
   const sameInst=Ms.every(m=>m.inst&&m.months===Ms[0].months&&m.pvp===Ms[0].pvp);
-  if(sameInst&&Ms.every(m=>m.promo))items.push({h:150,html:card(L.pmTitle,split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(eff-pv)}</span><span class="sm">${L.pmCardRest(100-Ms[0].pvp,Ms[0].months)}</span>`),{cls:"instc"})});
+  if(sameInst&&Ms.every(m=>m.promo))items.push({h:150,html:card(L.pmTitle,split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(eff-pv)}</span><span class="sm">${L.pmCardRest(100-Math.round(Ms[0].pvp),Ms[0].months)}</span>`),{cls:"instc"})});
   else if(sameInst&&Ms[0].pvp<=0)items.push({h:150,html:card(L.inst(Ms[0].months),`<div><span>${eur(monthly)}</span><span class="sm">${L.equal(Ms[0].months)}</span></div>`,{cls:"instc"})});
   else if(sameInst)items.push({h:150,html:card(L.inst(Ms[0].months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(Ms[0].pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${L.monthly}</span>`),{cls:"instc"})});
   const dl=fmtDate($("deadline").value),badge=!!dl&&items.length<=6;
@@ -1260,13 +1260,16 @@ function pmHalo(sl){
 function promoSlide(){
   const L=T[st.lang],l=st.lang,multi=st.mode==="multi"&&KP.length,w=$("promoWrap");
   const items=multi?KP:[snap()];
-  const on=st.proj!=="gl"&&items.every(o=>o.pay==="inst"&&o.promo&&o.obj!=="gl")&&items.every(o=>o.pv===items[0].pv&&o.months===items[0].months);
+  const on=st.proj!=="gl"&&items.every(o=>o.pay==="inst"&&o.promo&&o.obj!=="gl")&&items.every(o=>o.pv===items[0].pv&&(o.pvUnit||"pct")===(items[0].pvUnit||"pct")&&o.months===items[0].months);
   w.hidden=!on;if(!on)return;
   // суммы по юнитам (цена со скидкой)
-  let eff=0,gdb=0;
-  items.forEach(o=>{const pr=toNum(o.price),d=toNum(o.disc),b=o.discUnit==="pct"?pr*d/100:d,e=pr-b;eff+=e;gdb+=e*toNum(o.pv)/100*toNum(o.gdboost)/100});
-  const pvp=toNum(items[0].pv),m=Math.max(1,toNum(items[0].months)),y=toNum(items[0].gdboost);
-  const pv=Math.round(eff*pvp/100),rest=Math.round(eff-eff*pvp/100); // показываем ровно эти два числа, их сумма = стоимость на слайде расчёта
+  let eff=0,gdb=0,pvSum=0;const inEur=(items[0].pvUnit||"pct")==="eur";
+  items.forEach(o=>{const pr=toNum(o.price),d=toNum(o.disc),b=o.discUnit==="pct"?pr*d/100:d,e=inEur?Math.round(pr-b):pr-b,
+    p=inEur?Math.min(Math.max(0,toNum(o.pv)),e):e*toNum(o.pv)/100;eff+=e;pvSum+=p;gdb+=p*toNum(o.gdboost)/100});
+  const m=Math.max(1,toNum(items[0].months)),y=toNum(items[0].gdboost);
+  // первый взнос суммой (€): проценты на круге и в подписях — округлённые до целых, суммы — точные
+  const pvp=inEur?Math.min(99,Math.max(1,Math.round(pvSum/eff*100))):toNum(items[0].pv);
+  const pv=Math.round(inEur?pvSum:eff*pvp/100),rest=inEur?Math.round(eff)-pv:Math.round(eff-eff*pvp/100); // их сумма = стоимость на слайде расчёта
   $("sP").innerHTML=`${logo(kpObj())}<h2>${L.pmTitle}</h2>
    <div class="pmsub"><span>${L.pmNow(pvp)}</span><span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0Z" fill="#fff"/></svg>${L.pmLater(100-pvp,m)}</span></div>
    ${pmArtHtml(pvp,m,L)}
@@ -1275,9 +1278,12 @@ function promoSlide(){
   $("sP").querySelectorAll(".pmcards .card .h").forEach(h=>{const t=h.querySelector("span")||h;let f=20;h.style.fontSize=f+"px";while((t.scrollWidth>t.clientWidth+1||h.scrollWidth>h.clientWidth+1)&&f>14){f-=.5;h.style.fontSize=f+"px"}});
   $("sP").classList.toggle("sky",allSky());
 }
-$("promoPv").addEventListener("change",()=>{$("pv").value=$("promoPv").value;render()});
+$("promoPv").addEventListener("change",()=>{
+  const v=$("promoPv").value;
+  if(v==="eur"){if(st.pvUnit!=="eur")document.querySelector('#pvSeg button[data-v="eur"]').click();$("pv").focus();return}
+  if(st.pvUnit!=="pct"){st.pvUnit="pct";syncSeg()}$("pv").value=v;render()});
 $("promo").addEventListener("change",()=>{$("promoPvBox").hidden=!$("promo").checked;
-  if($("promo").checked){st.pvUnit="pct";syncSeg();$("months").value=$("share").value==="1000"?13:6;$("pv").value=$("promoPv").value;$("gdmode").value="boost";if(!num("gdboost"))$("gdboost").value=7}
+  if($("promo").checked){st.pvUnit="pct";syncSeg();$("months").value=$("share").value==="1000"?13:6;$("promoPv").value="50";$("pv").value="50";$("gdmode").value="boost";if(!num("gdboost"))$("gdboost").value=7}
   document.querySelectorAll(".boost-only").forEach(e=>e.hidden=$("gdmode").value!=="boost");render()});
 function fit(){document.querySelectorAll(".frame").forEach(fr=>{fr.firstElementChild.style.transform=`scale(${fr.clientWidth/1920})`})}
 new ResizeObserver(fit).observe(document.querySelector(".preview"));
@@ -1561,7 +1567,7 @@ function kpName(){
   const LAT={А:"A",В:"B",Б:"B",С:"C",Е:"E",Н:"H",К:"K",М:"M",О:"O",Р:"P",Т:"T",Х:"X",а:"a",в:"b",с:"c",е:"e",о:"o",р:"p",х:"x"};
   const lat=v=>String(v||"").trim().replace(/[А-яЁё]/g,c=>LAT[c]||"").replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ");
   const part=o=>{const sh={"500":"1-2","250":"1-4","125":"1-8"}[o.share];
-    return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(()=>{let v=toNum(o.pv);if(o.pvUnit==="eur"&&!o.promo){const pr=toNum(o.price),d=toNum(o.disc),e=pr-(o.discUnit==="pct"?pr*d/100:d);v=e>0?v/e*100:0}return(Math.round(v)||0)+"%"})():"fix"].filter(Boolean).join("_")};
+    return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(()=>{let v=toNum(o.pv);if(o.pvUnit==="eur"){const pr=toNum(o.price),d=toNum(o.disc),e=pr-(o.discUnit==="pct"?pr*d/100:d);v=e>0?v/e*100:0}return(Math.round(v)||0)+"%"})():"fix"].filter(Boolean).join("_")};
   const l=st.lang;
   if(st.mode==="multi"&&KP.length>1){
     KP[CUR]=snap();
@@ -1579,7 +1585,7 @@ function checkReady(){
 function logKp(mode){
   const d={manager:$("mgr").value.trim(),object:$("obj").value,unit:$("unit").value,share:SHARE_LBL[$("share").value]||"целый",
     lang:st.lang,pay:st.pay==="inst"?"рассрочка":"100%",price:num("price"),discount:$("disc").value+(st.discUnit==="pct"?"%":"€"),
-    months:st.pay==="inst"?num("months"):"",pv:st.pay==="inst"?(st.pvUnit==="eur"&&!$("promo").checked?"€"+num("pv"):num("pv")+"%"):"",gd:$("gdmode").value,deadline:$("deadline").value,
+    months:st.pay==="inst"?num("months"):"",pv:st.pay==="inst"?(st.pvUnit==="eur"?"€"+num("pv"):num("pv")+"%"):"",gd:$("gdmode").value,deadline:$("deadline").value,
     manual:$("manual").checked,headline:$("headline").selectedOptions[0].text,slides:includedSlides().length,mode};
   if(st.mode==="multi"&&KP.length>1){d.object="сборное: "+[...new Set(KP.map(k=>NAME_IN_PRICES[k.obj]))].join(", ");
     d.unit=KP.map(k=>NAME_IN_PRICES[k.obj]+" "+(k.unit||k.room)+(SHARE_LBL[k.share]?" "+SHARE_LBL[k.share]:"")).join("; ");d.share="";
