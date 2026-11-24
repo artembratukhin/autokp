@@ -479,6 +479,10 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 .card.days{height:163px}
 .days .b>div,.inst .b>div{display:flex;flex-direction:column;align-items:center;line-height:1}
 .days .b>div{text-align:center}
+.calcslide.ny .left{border-radius:0}
+.calcslide.ny .nyd{position:absolute;height:auto;z-index:4;pointer-events:none}
+.calcslide.ny .nynote{position:absolute;left:830px;top:916px;margin:0;display:flex;align-items:center;gap:6px;font-family:"Brygada 1918",Georgia,serif;font-weight:600;font-size:20px;line-height:1.05;letter-spacing:.02em;color:#fff;z-index:3}
+.cover.nycover>*:not(.photo):not(.cobrand){display:none}
 .days .big.hasb{font-size:86%;white-space:nowrap}
 .days .bonus{font-style:normal;background:linear-gradient(100deg,#c9a46a,#f3dcae 50%,#c39a5e);-webkit-background-clip:text;background-clip:text;color:transparent}
 .gl .days .bonus{background:linear-gradient(100deg,#d6b07a,#f6e0b4 50%,#c9a46a);-webkit-background-clip:text;background-clip:text}
@@ -520,7 +524,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 17-10</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 18-00</span></p>
   </header>
 
   <div class="side">
@@ -624,7 +628,8 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 
     <fieldset id="promoBox">
       <legend>Акции</legend>
-        <label class="check full"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»</label>
+        <label class="check full" id="promoWg"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»</label>
+        <label class="check full" id="nyWrap" hidden><input type="checkbox" id="nyGl"> Grand Life — ГД 10% — Новый год 2026</label>
         <p class="hint full" id="promoHint" hidden>Срок по умолчанию: части — 6 месяцев, целые юниты — 13.</p>
         <label class="full" id="promoPvBox" hidden>Вариант акции <select id="promoPv"><option value="50">50% сейчас / 50% позже</option><option value="70">70% сейчас / 30% позже</option><option value="eur">Своя сумма первого взноса, €</option></select></label>
     </fieldset>
@@ -887,7 +892,7 @@ const T={
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
   gdDuringY:"Гарантированный доход в год на период рассрочки",gdAfterY:"Гарантированный доход в год после рассрочки",
-  terms:"Условия покупки:",full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,untilShort:d=>`Условия действуют до ${d}`,
+  terms:"Условия покупки:",full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,untilShort:d=>`Условия действуют до ${d}`,gdYearUp:"Повышенный гарантированный доход в год*",nyNote:"Повышенный гарантированный доход<br>действует при условии оплаты до 31.12.2026.",
   plan:"Планировка",planS:"подтянется с Диска",cover:"Фото обложки — подтянется с Диска"},
  en:{kicker:"Commercial offer",heads:["Hotel real estate\nfor investment","The privilege of guaranteed income during the installment payment period","The privileges of increased guaranteed income"],
   area:"square footage:",room:"room:",floor:"floor:",villa:"villa:",plot:"land plot:",m2:"m<sup>2</sup>",
@@ -900,7 +905,7 @@ const T={
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
   gdDuringY:"Guaranteed annual income during the installment period",gdAfterY:"Guaranteed annual income after the installment period",
-  terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,untilShort:d=>`Terms valid until ${d}`,
+  terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,untilShort:d=>`Terms valid until ${d}`,gdYearUp:"Increased guaranteed annual income*",nyNote:"The increased guaranteed income applies<br>subject to payment by 31.12.2026.",
   plan:"Floor plan",planS:"will be pulled from Drive",cover:"Cover photo — will be pulled from Drive"}
 };
 const st={lang:"ru",pay:"inst",font:"o",discUnit:"pct",pvUnit:"pct",mode:"one",proj:"wgbg"};
@@ -1252,6 +1257,24 @@ function casaItc(){
   const k=casaNorm(pre+" "+unit+(sh?" "+sh:""));
   return (CASA_ITC[st.pay==="full"?"full":"inst"]||{})[k]||null;
 }
+/* ===== Акция «Grand Life — ГД 10% — Новый год 2026» =====
+   Включение: 100% оплата, ГД после оплаты 10%, срок 31.12.2026; выключение — всё обратно, как было до включения.
+   Слайды: новогодняя обложка (картинка из макета), на расчёте — ленты/подарок, «Повышенный ГД*» золотом и сноска. */
+const nyOn=()=>$("nyGl").checked&&st.proj==="gl";
+let NY_PREV=null;
+function nyApply(on){
+  if(on){NY_PREV={pay:st.pay,gdfull:$("gdfull").value,deadline:$("deadline").value};
+    $("gdfull").value="10";$("deadline").value="2026-12-31";
+    const b=document.querySelector('button[data-k="pay"][data-v="full"]');if(b&&st.pay!=="full")b.click();}
+  else if(NY_PREV){$("gdfull").value=NY_PREV.gdfull;$("deadline").value=NY_PREV.deadline;
+    const b=document.querySelector(`button[data-k="pay"][data-v="${NY_PREV.pay}"]`);if(b&&st.pay!==NY_PREV.pay)b.click();NY_PREV=null}
+  else applyUnit();
+}
+function nyDecor(L){
+  return `<img class="nyd" src="partners/ny2026/rib_top.png" style="left:560px;top:0;width:550px" alt=""><img class="nyd" src="partners/ny2026/rib_left.png" style="left:0;top:820px;width:175px" alt="">
+    <img class="nyd" src="partners/ny2026/gift.png" style="left:1410px;top:790px;width:510px" alt="">
+    <p class="nynote"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#d8b47a" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9.5 3.5L12 6l2.5-2.5M9.5 20.5L12 18l2.5 2.5M4 10.3l3.4.9-.9 3.4M20 13.7l-3.4-.9.9-3.4M4 13.7l3.4-.9-.9-3.4M20 10.3l-3.4.9.9 3.4"/></svg><span>${L.nyNote}</span></p>`;
+}
 let shareNote="";
 function applyUnit(){
   const list=UNITS[$("obj").value]||[],u=list.find(x=>x.id===$("unit").value);
@@ -1266,6 +1289,7 @@ function applyUnit(){
     if(u.gd)$("gdfull").value=Math.round(u.gd*10)/10;
     const d=DIR[(($("obj").value==="gl"?"grand life "+(u.block||String(u.id).slice(-1)):NAME_IN_PRICES[$("obj").value])||"").toLowerCase()+"|"+sh];
     if(d){if(d.gd)$("gdfull").value=d.gd;$("rci").value=d.rci||0;$("itc").value=d.itc||0;if(d.months)$("months").value=d.months;if(d.gdinst)$("gdinst").value=d.gdinst}
+    if(nyOn()){if(NY_PREV)NY_PREV.gdfull=$("gdfull").value;$("gdfull").value="10"} // акция ГД 10%: юнит меняется — ГД остаётся 10%
     if($("promo").checked&&$("obj").value!=="gl"){$("months").value=sh==="1000"?13:6;if($("promoPv").value!=="eur")$("pv").value=$("promoPv").value}
     if(u.hotelEst)shareNote=(shareNote?shareNote+" ":"")+"Доход от управления для этой площади в УТП нет — посчитан пропорционально ближайшей планировке.";
   }
@@ -1340,7 +1364,8 @@ function calcInto(el){
   }else{
     // ГД выше стандартного по объекту — блок золотой
     const sg=stdGdFull(),up=sg!==null&&num("gdfull")>sg+1e-9;if(up)gold++;
-    items.push({h:134,html:card(L.gdYear,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)),{gold:up})});
+    const ny=nyOn()&&obj==="gl";if(ny&&!up)gold++;
+    items.push({h:134,html:card(ny?L.gdYearUp:L.gdYear,split(eur(eff*num("gdfull")/100),pct(num("gdfull"),l)),{gold:up||ny})});
   }
   const cI=casaItc(),rciN=Math.round(num("rci")),itcN=cI&&!$("manual").checked?cI.base:Math.round(num("itc")),itcB=cI?cI.bonus:0;
   const rciD=`<span class="big">${L.itc(rciN)}</span><span class="sm">${L.d60s}</span>`,itcD=`<span class="big${itcB?" hasb":""}">${itcB?`${itcN}<em class="bonus">+${L.bonus(itcB)}</em>`:L.itc(itcN)}</span><span class="sm">${L.itcs}</span>`;
@@ -1349,19 +1374,22 @@ function calcInto(el){
   // Не помещается — срок становится заголовком карточки условий под планировкой (без второй акцентной плашки)
   // справа под расчётами, если влезает с нормальными промежутками (≥14 px); иначе — в левую панель под условия оплаты
   const AV0=1030-(obj==="gl"?176:140),sum0=items.reduce((a,b)=>a+b.h,0);
-  const right=!!dl&&sum0+47+14*items.length<=AV0;
-  const badgeFits=!!dl;
+  const nyS=nyOn()&&obj==="gl";
+  const right=!nyS&&!!dl&&sum0+47+14*items.length<=AV0;
+  const badgeFits=!nyS&&!!dl;
   if(badgeFits)gold++;
   if(right)items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1010,47)}<span>${L.untilLine(dl)}</span></div>`});
-  const bottom=mkBottom(""),badge=dl&&!right?`<div class="deadline calcbadge lbadge">${goldShape("bar",638,47)}<span>${L.untilLine(dl)}</span></div>`:"";
+  const bottom=mkBottom(""),badge=!nyS&&dl&&!right?`<div class="deadline calcbadge lbadge">${goldShape("bar",638,47)}<span>${L.untilLine(dl)}</span></div>`:"";
   // одинаковая высота карточек; если не влезает — сжимаем только промежутки (20 → 6 px)
-  const TOP=obj==="gl"?176:140,AVAIL=1030-TOP,sum=items.reduce((a,b)=>a+b.h,0);
-  const gap=Math.max(6,Math.min(obj==="gl"?28:20,(AVAIL-sum)/Math.max(1,items.length-1)));
+  const NY=nyOn()&&obj==="gl";
+  const TOP=NY?198:obj==="gl"?176:140,AVAIL=(NY?882:1030)-TOP,sum=items.reduce((a,b)=>a+b.h,0);
+  const gap=Math.max(6,Math.min(NY?40:obj==="gl"?28:20,(AVAIL-sum)/Math.max(1,items.length-1)));
   const top=obj==="gl"?TOP:TOP+Math.max(0,(AVAIL-sum-gap*(items.length-1))/2); // Grand Life: карточки от верха, как в макете
 
   el.innerHTML=`<div class="left"><div class="cat goldfill edge">${shLbl?(l==="ru"?`${shLbl} часть `:`${shLbl} part of `):""}${esc(cat)}</div><div class="specs">${sp.map(s=>`<span>${s}</span>`).join("")}</div>
    ${planHtml(L,cat)}${bottom}${badge}</div>${logo()}
-   <div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>`;
+   <div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>${NY?nyDecor(L):""}`;
+  el.classList.toggle("ny",NY);
 
   el.classList.toggle("sky",obj==="sky");el.classList.toggle("gl",obj==="gl");
   // плашка срока: текст не должен упираться в края (у Grand Life шрифт шире) — уменьшаем, пока не влезет
@@ -1379,7 +1407,7 @@ function render(){
   const inst=st.pay==="inst",promo=inst&&$("promo").checked&&obj!=="gl",boost=inst&&($("gdmode").value!=="std"||promo);
   const resale=fin-eff,dl=fmtDate($("deadline").value),hotel=num("hotel");
   document.querySelectorAll(".inst-only").forEach(e=>e.hidden=!inst);
-  $("promoBox").hidden=!inst||st.proj==="gl";
+  $("promoBox").hidden=st.proj==="gl"?false:!inst;$("promoWg").hidden=st.proj==="gl";$("nyWrap").hidden=st.proj!=="gl";
   document.querySelectorAll(".std-only").forEach(e=>e.hidden=!inst||boost);
   document.querySelectorAll(".boost-only").forEach(e=>e.hidden=!boost||(!promo&&$("gdmode").value==="after"));
   document.body.classList.toggle("fonts-manrope",st.font==="m");document.body.classList.toggle("fonts-analog",st.font==="a");
@@ -1392,6 +1420,7 @@ function render(){
   $("s1").classList.toggle("mcover",objs.length>1);if(objs.length<2)$("s1").classList.remove("panels","logoR");
   ["s1","s2","s4","s5"].forEach(id=>$(id).classList.toggle("gl",st.proj==="gl"));
   if(objs.length>1)multiCover(objs,L,dl);
+  else if(obj==="gl"&&nyOn()&&l==="ru")$("s1").innerHTML=`<img class="photo" src="partners/ny2026/cover_ru.jpg" alt="">`; // EN-обложки пока нет — стандартная
   else if(obj==="gl")$("s1").innerHTML=`${cov&&cov.url?`<img class="photo" src="${cov.url}" alt="">`:`<div class="ph"><span>${cov&&cov.msg?esc(cov.msg):L.cover}</span></div>`}<div class="dim"></div><div class="shade"></div>${logo("gl")}
      <div class="kicker">${l==="ru"?"Коммерческое<br>предложение":"Commercial offer"}</div><h2>${esc(L.heads[+$("headline").value]).replace(/(^|\s)([^\s]{1,3}) /g,"$1$2\u00a0").replace(/\n/g,"<br>")}</h2>
      ${dl?`<div class="deadline">${goldShape("flag",560,96)}<span>${L.until(dl)}</span></div>`:""}`;
@@ -1399,7 +1428,8 @@ function render(){
    <div class="kicker">${L.kicker}</div><h2>${esc(L.heads[+$("headline").value]).replace(/\n/g,"<br>")}</h2>
    ${dl?`<div class="deadline">${goldShape("flag",560,96)}<span>${L.until(dl)}</span></div>`:""}`;
 
-  fitCover($("s1"));cobrand($("s1"));
+  $("s1").classList.toggle("nycover",obj==="gl"&&nyOn()&&l==="ru");
+  if(!(obj==="gl"&&nyOn()&&l==="ru"))fitCover($("s1"));cobrand($("s1"));
   if(st.mode==="multi")renderMulti(L);
   else{
     $("multiHost").innerHTML="";$("calcWrap").hidden=false;
@@ -1413,7 +1443,7 @@ function render(){
 }
 
 /* ---------- Сборное КП: несколько юнитов, суммарный слайд ---------- */
-const ITEM_IDS=["obj","share","unit","manual","cat","area","room","floor","price","final","plot","hotel","disc","months","pv","gdmode","gdinst","gdboost","gdfull","rci","itc","promo"];
+const ITEM_IDS=["obj","share","unit","manual","cat","area","room","floor","price","final","plot","hotel","disc","months","pv","gdmode","gdinst","gdboost","gdfull","rci","itc","promo","nyGl"];
 let KP=[],CUR=0;
 const allSky=()=>st.mode==="multi"&&KP.length?KP.every(k=>k.obj==="sky"):$("obj").value==="sky";
 const kpObj=()=>st.mode==="multi"&&KP.length?(KP.every(k=>k.obj===KP[0].obj)?KP[0].obj:null):$("obj").value;
@@ -1644,6 +1674,7 @@ $("promoPv").addEventListener("change",()=>{
   const v=$("promoPv").value;
   if(v==="eur"){if(st.pvUnit!=="eur")document.querySelector('#pvSeg button[data-v="eur"]').click();$("pv").focus();return}
   if(st.pvUnit!=="pct"){st.pvUnit="pct";syncSeg()}$("pv").value=v;render()});
+$("nyGl").addEventListener("change",()=>{nyApply($("nyGl").checked);render()});
 $("promo").addEventListener("change",()=>{$("promoPvBox").hidden=$("promoHint").hidden=!$("promo").checked;
   if($("promo").checked){st.pvUnit="pct";syncSeg();$("months").value=$("share").value==="1000"?13:6;$("promoPv").value="50";$("pv").value="50";$("gdmode").value="boost";if(!num("gdboost"))$("gdboost").value=7}
   document.querySelectorAll(".boost-only").forEach(e=>e.hidden=$("gdmode").value!=="boost");render()});
@@ -1662,7 +1693,7 @@ document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",(
 function setProj(v){
   st.proj=v;const gl=v==="gl";document.documentElement.classList.toggle("proj-gl",gl);
   [...$("obj").options].forEach(o=>o.hidden=gl?o.value!=="gl":o.value==="gl");
-  $("promoBox").hidden=gl;if(gl)$("promo").checked=false;
+  if(gl)$("promo").checked=false;else if($("nyGl").checked){$("nyGl").checked=false;nyApply(false)}
   $("obj").value=gl?"gl":"aqua";
   $("obj").dispatchEvent(new Event("change",{bubbles:true}));
   if(st.mode==="multi"){KP=[snap()];CUR=0;renderList();render()} // юниты другого проекта в сборное не переносим
@@ -1951,7 +1982,7 @@ function kpName(){
   const part=o=>{const sh={"500":"1-2","250":"1-4","125":"1-8"}[o.share];
     return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(()=>{let v=toNum(o.pv);if(o.pvUnit==="eur"){const pr=toNum(o.price),d=toNum(o.disc),e=pr-(o.discUnit==="pct"?pr*d/100:d);v=e>0?v/e*100:0}return(Math.round(v)||0)+"%"})():"fix"].filter(Boolean).join("_")};
   // акция «Кредитные каникулы» — «_special_offer» перед языком
-  const promoOf=o=>o.pay==="inst"&&o.promo&&o.obj!=="gl",so=list=>list.some(promoOf)?"_special_offer":"";
+  const promoOf=o=>o.pay==="inst"&&o.promo&&o.obj!=="gl"||o.obj==="gl"&&o.nyGl,so=list=>list.some(promoOf)?"_special_offer":"";
   const l=st.lang;
   if(st.mode==="multi"&&KP.length>1){
     KP[CUR]=snap();
