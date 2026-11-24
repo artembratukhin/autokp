@@ -519,7 +519,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 14-55</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 15-05</span></p>
   </header>
 
   <div class="side">
@@ -616,14 +616,16 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
       <label class="inst-only std-only">ГД при рассрочке, % <input id="gdinst" value="5" inputmode="decimal"></label>
       <label class="inst-only boost-only">ГД на период рассрочки, % <input id="gdboost" value="7" inputmode="decimal"></label>
       <label>ГД после оплаты, % <input id="gdfull" value="10" inputmode="decimal"></label>
-      <div class="full mbox" id="promoBox">
-        <label class="check"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»</label>
-        <p class="hint" id="promoHint" hidden>Срок по умолчанию: части — 6 месяцев, целые юниты — 13.</p>
-        <label id="promoPvBox" hidden>Вариант акции <select id="promoPv"><option value="50">50% сейчас / 50% позже</option><option value="70">70% сейчас / 30% позже</option><option value="eur">Своя сумма первого взноса, €</option></select></label>
-      </div>
       <p class="hint" id="calcline" hidden></p>
       <p class="note" id="enNote" hidden></p>
       <p class="note" id="objNote" hidden>По этому объекту в прайсе нет юнитов. Можно включить «Индивидуальный расчёт» и ввести цифры вручную.</p>
+    </fieldset>
+
+    <fieldset id="promoBox">
+      <legend>Акции</legend>
+        <label class="check full"><input type="checkbox" id="promo"> Акция «Кредитные каникулы»</label>
+        <p class="hint full" id="promoHint" hidden>Срок по умолчанию: части — 6 месяцев, целые юниты — 13.</p>
+        <label class="full" id="promoPvBox" hidden>Вариант акции <select id="promoPv"><option value="50">50% сейчас / 50% позже</option><option value="70">70% сейчас / 30% позже</option><option value="eur">Своя сумма первого взноса, €</option></select></label>
     </fieldset>
 
     <fieldset id="partnerBox">
