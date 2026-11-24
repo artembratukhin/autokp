@@ -524,7 +524,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 18-00</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 18-05</span></p>
   </header>
 
   <div class="side">
@@ -1982,7 +1982,7 @@ function kpName(){
   const part=o=>{const sh={"500":"1-2","250":"1-4","125":"1-8"}[o.share];
     return [NAME_IN_PRICES[o.obj],lat(o.unit||o.room),sh,o.pay==="inst"?(()=>{let v=toNum(o.pv);if(o.pvUnit==="eur"){const pr=toNum(o.price),d=toNum(o.disc),e=pr-(o.discUnit==="pct"?pr*d/100:d);v=e>0?v/e*100:0}return(Math.round(v)||0)+"%"})():"fix"].filter(Boolean).join("_")};
   // акция «Кредитные каникулы» — «_special_offer» перед языком
-  const promoOf=o=>o.pay==="inst"&&o.promo&&o.obj!=="gl"||o.obj==="gl"&&o.nyGl,so=list=>list.some(promoOf)?"_special_offer":"";
+  const promoOf=o=>o.pay==="inst"&&o.promo&&o.obj!=="gl",nyOf=o=>o.obj==="gl"&&o.nyGl,so=list=>list.some(promoOf)?"_special_offer":list.some(nyOf)?"_10%":"";
   const l=st.lang;
   if(st.mode==="multi"&&KP.length>1){
     KP[CUR]=snap();
