@@ -543,7 +543,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 20-10</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 20-20</span></p>
   </header>
 
   <div class="side">
@@ -1014,7 +1014,7 @@ function partnersSlide(){
   $("s2").classList.toggle("sky",sky);$("s2").classList.toggle("gl",gl);
   $("s2").innerHTML=`${logo(kpObj())}<h2>${title}</h2><div class="sub">${P.sub}</div>
    <div class="ptable">${(gl?PARTNER_LOGOS_GL:PARTNER_LOGOS).map(([k,n])=>`<div class="lg"><img src="${LOGO[k]}" alt="${n}" width="410" height="100"></div>`).join("")}
-   ${P.cols.map(c=>`<div class="col">${c.map(([n,t])=>`<div class="st">${n==="@Forbes"?`<img class="forbes" src="${LOGO.forbes}" alt="Forbes Georgia" width="140" height="35">`:`<b>${n}</b>`}<span>${t}</span></div>`).join("")}</div>`).join("")}</div>`;
+   ${P.cols.map(c=>`<div class="col">${c.map(([n,t])=>`<div class="st">${n==="@Forbes"?`<img class="forbes" src="${gl&&LOGO.forbesGold||LOGO.forbes}" alt="Forbes Georgia" width="140" height="35">`:`<b>${n}</b>`}<span>${t}</span></div>`).join("")}</div>`).join("")}</div>`;
 }
 /* Тексты слайда 5 — с макетов «8 причин для инвестиций» (RU/EN) */
 const REASONS={
@@ -1986,7 +1986,16 @@ function planHtml(L,cat){
 }
 
 /* ---------- Запуск: настройки → прайс, обложки, планировки ---------- */
+/* Forbes в Grand Life — золотой, как цифры на слайде (#dcb882). Перекрашиваем белый PNG один раз на canvas. */
+function goldForbes(){try{
+  if(typeof LOGO==="undefined"||!LOGO.forbes||LOGO.forbesGold)return;
+  const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;
+    const x=c.getContext("2d");x.drawImage(im,0,0);x.globalCompositeOperation="source-in";x.fillStyle="#dcb882";x.fillRect(0,0,c.width,c.height);
+    LOGO.forbesGold=c.toDataURL("image/png");
+    document.querySelectorAll(".gl img.forbes").forEach(i=>i.src=LOGO.forbesGold)};
+  im.src=LOGO.forbes}catch(e){}}
 async function init(){
+  goldForbes();
   $("dataStatus").textContent="Загружаю настройки…";
   let c;
   try{c=await api("getConfig")}
