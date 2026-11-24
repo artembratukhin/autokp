@@ -543,7 +543,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 20-20</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 20-30</span></p>
   </header>
 
   <div class="side">
@@ -915,8 +915,8 @@ const T={
   plan:"Планировка",planS:"подтянется с Диска",cover:"Фото обложки — подтянется с Диска"},
  en:{kicker:"Commercial offer",heads:["Hotel real estate\nfor investment","The privilege of guaranteed income during the installment payment period","The privileges of increased guaranteed income"],
   area:"square footage:",room:"room:",floor:"floor:",villa:"villa:",plot:"land plot:",m2:"m<sup>2</sup>",
-  special:"Special offer price",benefit:p=>`Your benefit${p?" "+p:""}`,current:"Current cost",currentShare:(x,o)=>`Current cost of ${x} of the ${o==="villas"?"villa":o==="riviera"?"townhouse":"room"}`,growth:"Annual cost increase",growthV:"from 30%",final:"Cost at the end of construction",
-  resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income annual",
+  special:"Special offer price",benefit:p=>`Your benefit${p?" "+p:""}`,current:"Current cost",currentShare:(x,o)=>`Current cost of a ${x} of the ${o==="villas"?"villa":o==="riviera"?"townhouse":"hotel unit"}`,growth:"Annual cost increase",growthV:"from 30%",final:"Cost at the end of construction",
+  resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income (annual)",
   gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
   d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",bonus:n=>`${n} bonus ${n===1?"day":"days"}`,itc:n=>`${n} days`,itcs:"ITC program vacation",
   inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p)}%`,monthly:"Monthly payment",monthlyFor:m=>`Monthly payment · ${m} months`,
