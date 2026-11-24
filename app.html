@@ -520,7 +520,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 16-55</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 17-00</span></p>
   </header>
 
   <div class="side">
@@ -1347,13 +1347,10 @@ function calcInto(el){
   if(rciN>0||itcN>0)items.push({h:163,html:card(L.days,rciN>0&&itcN>0?split(rciD,itcD):`<div>${rciN>0?rciD:itcD}</div>`,{cls:"days"})});
   // плашка срока условий — под расчётами справа (как в макете: до 5 блоков + плашка).
   // Не помещается — срок становится заголовком карточки условий под планировкой (без второй акцентной плашки)
-  // WGBG: плашка в левой панели под условиями оплаты (тёмная карточка + одна золотая плашка — это ок).
-  // Grand Life: справа под расчётами; не влезает — срок в заголовке карточки условий под планировкой
-  const isGL=obj==="gl";
-  const badgeFits=!!dl&&(!isGL||items.length<=5);
-  if(badgeFits&&isGL)items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1010,47)}<span>${L.untilLine(dl)}</span></div>`});
+  // плашка срока условий — в левой панели, под карточкой условий оплаты (WGBG и Grand Life)
+  const badgeFits=!!dl;
   if(badgeFits)gold++;
-  const bottom=mkBottom(isGL&&dl&&!badgeFits?dl:""),badge=!isGL&&dl?`<div class="deadline calcbadge lbadge">${goldShape("bar",638,47)}<span>${L.untilLine(dl)}</span></div>`:"";
+  const bottom=mkBottom(""),badge=dl?`<div class="deadline calcbadge lbadge">${goldShape("bar",638,47)}<span>${L.untilLine(dl)}</span></div>`:"";
   // одинаковая высота карточек; если не влезает — сжимаем только промежутки (20 → 6 px)
   const TOP=obj==="gl"?176:140,AVAIL=1030-TOP,sum=items.reduce((a,b)=>a+b.h,0);
   const gap=Math.max(6,Math.min(obj==="gl"?28:20,(AVAIL-sum)/Math.max(1,items.length-1)));
