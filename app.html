@@ -485,6 +485,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 .big{font-size:50px}
 .sm{font-size:18px;margin-top:6px;line-height:1.2;opacity:.9;white-space:normal}
 .inst .card{height:150px}
+.fullterms .card{height:150px}.fullterms .tl{font-size:30px;letter-spacing:.02em;white-space:nowrap}
 .calcbadge.lbadge{width:100%;margin-top:22px;font-size:22px;white-space:nowrap;padding:0 26px;box-sizing:border-box}
 .calcslide.gl .calcbadge.lbadge{font-size:20px;letter-spacing:.01em}
 .calcbadge{height:47px;display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
@@ -519,7 +520,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 15-05</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 16-45</span></p>
   </header>
 
   <div class="side">
@@ -881,12 +882,12 @@ const T={
   resale:"Доход от перепродажи",hotel:"Доход от отельного управления в год",gdHotel:"Гарантированный доход от отельного управления в год",gdYear:"Гарантированный доход в год",
   gdDuring:"Гарантированный доход на период рассрочки",gdAfter:"Гарантированный доход после полной оплаты",days:"Дни отдыха",
   d60:"60 дней",d60s:"Отдых в отельном номере<br>(могут быть обменены по программе RCI)",bonus:n=>`${n} ${plural(n,"день","дня","дней")} в подарок`,itc:n=>`${n} ${plural(n,"день","дня","дней")}`,itcs:"Отдых по программе ITC",
-  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${Math.round(p)}%`,monthly:"Ежемесячный платёж",
+  inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${Math.round(p)}%`,monthly:"Ежемесячный платёж",monthlyFor:m=>`Ежемесячный платёж · ${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmTitle:"Условия покупки",pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
   gdDuringY:"Гарантированный доход в год на период рассрочки",gdAfterY:"Гарантированный доход в год после рассрочки",
-  terms:"Условия покупки:",full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,
+  terms:"Условия покупки:",full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,untilShort:d=>`Условия действуют до ${d}`,
   plan:"Планировка",planS:"подтянется с Диска",cover:"Фото обложки — подтянется с Диска"},
  en:{kicker:"Commercial offer",heads:["Hotel real estate\nfor investment","The privilege of guaranteed income during the installment payment period","The privileges of increased guaranteed income"],
   area:"square footage:",room:"room:",floor:"floor:",villa:"villa:",plot:"land plot:",m2:"m<sup>2</sup>",
@@ -894,12 +895,12 @@ const T={
   resale:"Resale profit",hotel:"Hotel management income (annual)",gdHotel:"Hotel management guaranteed income (annual)",gdYear:"Guaranteed income annual",
   gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
   d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",bonus:n=>`${n} bonus ${n===1?"day":"days"}`,itc:n=>`${n} days`,itcs:"ITC program vacation",
-  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p)}%`,monthly:"Monthly payment",
+  inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p)}%`,monthly:"Monthly payment",monthlyFor:m=>`Monthly payment · ${m} months`,
   pmTitle:"Terms of purchase",pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
   gdDuringY:"Guaranteed annual income during the installment period",gdAfterY:"Guaranteed annual income after the installment period",
-  terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,
+  terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,untilShort:d=>`Terms valid until ${d}`,
   plan:"Floor plan",planS:"will be pulled from Drive",cover:"Cover photo — will be pulled from Drive"}
 };
 const st={lang:"ru",pay:"inst",font:"o",discUnit:"pct",pvUnit:"pct",mode:"one",proj:"wgbg"};
@@ -1304,12 +1305,15 @@ function calcInto(el){
     if(blk)sp.push(`${l==="ru"?"блок:":"block:"} <b>${blk}</b>`);
     sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`);sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.area} <b>${esc(areaTxt)} ${L.m2}</b>`);}
   else if(!isVilla&&!isRiv){sp.push(`${L.room} <b>${esc($("room").value)}</b>`);sp.push(`${L.floor} <b>${esc($("floor").value)}</b>`)}
-  const bottom=promo
-   ?(q=>`<div class="inst pminst">${card(L.pmTitle,`<div class="pmrow"><b>${q}%</b>${pmIcon(q)}<b>${100-q}%</b><i></i><span>${L.pmNow(q)},<br>${L.pmLater(100-q,months)}</span></div>`)}</div>`)(Math.min(99,Math.max(1,Math.round(pvp))))
+  // dlB — срок условий не поместился справа: он становится заголовком карточки условий под планировкой
+  const mkBottom=dlB=>promo
+   ?(q=>`<div class="inst pminst">${card(dlB?L.untilShort(dlB):L.pmTitle,`<div class="pmrow"><b>${q}%</b>${pmIcon(q)}<b>${100-q}%</b><i></i><span>${L.pmNow(q)},<br>${L.pmLater(100-q,months)}</span></div>`)}</div>`)(Math.min(99,Math.max(1,Math.round(pvp))))
    :noPv
-   ?`<div class="inst">${card(L.inst(months),`<div><span>${eur(monthly)}</span><span class="sm">${L.equal(months)}</span></div>`)}</div>`
+   ?`<div class="inst">${card(dlB?L.untilShort(dlB):L.inst(months),`<div><span>${eur(monthly)}</span><span class="sm">${L.equal(months)}</span></div>`)}</div>`
    :inst
-   ?`<div class="inst">${card(L.inst(months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${L.monthly}</span>`))}</div>`
+   ?`<div class="inst">${card(dlB?L.untilShort(dlB):L.inst(months),split(`<span>${eur(pv)}</span><span class="sm">${L.pv(pvp)}</span>`,`<span>${eur(monthly)}</span><span class="sm">${dlB?L.monthlyFor(months):L.monthly}</span>`))}</div>`
+   :dlB
+   ?`<div class="inst fullterms">${card(L.untilShort(dlB),`<div><span class="tl">${L.terms} ${L.full}</span></div>`)}</div>`
    :`<div class="terms"><span>${L.terms}</span><b>${L.full}</b></div>`;
 
   // правая колонка: какие карточки и что золотое — решает шаблон
@@ -1341,9 +1345,11 @@ function calcInto(el){
   const cI=casaItc(),rciN=Math.round(num("rci")),itcN=cI&&!$("manual").checked?cI.base:Math.round(num("itc")),itcB=cI?cI.bonus:0;
   const rciD=`<span class="big">${L.itc(rciN)}</span><span class="sm">${L.d60s}</span>`,itcD=`<span class="big${itcB?" hasb":""}">${itcB?`${itcN}<em class="bonus">+${L.bonus(itcB)}</em>`:L.itc(itcN)}</span><span class="sm">${L.itcs}</span>`;
   if(rciN>0||itcN>0)items.push({h:163,html:card(L.days,rciN>0&&itcN>0?split(rciD,itcD):`<div>${rciN>0?rciD:itcD}</div>`,{cls:"days"})});
-  // плашка срока условий — в левой панели, под условиями оплаты
-  const badgeFits=!!dl,badge=dl?`<div class="deadline calcbadge lbadge">${goldShape("bar",638,47)}<span>${L.untilLine(dl)}</span></div>`:"";
-  if(badgeFits)gold++;
+  // плашка срока условий — под расчётами справа (как в макете: до 5 блоков + плашка).
+  // Не помещается — срок становится заголовком карточки условий под планировкой (без второй акцентной плашки)
+  const badgeFits=!!dl&&items.length<=5;
+  if(badgeFits){items.push({h:47,html:`<div class="deadline calcbadge">${goldShape("bar",1010,47)}<span>${L.untilLine(dl)}</span></div>`});gold++}
+  const bottom=mkBottom(dl&&!badgeFits?dl:""),badge="";
   // одинаковая высота карточек; если не влезает — сжимаем только промежутки (20 → 6 px)
   const TOP=obj==="gl"?176:140,AVAIL=1030-TOP,sum=items.reduce((a,b)=>a+b.h,0);
   const gap=Math.max(6,Math.min(obj==="gl"?28:20,(AVAIL-sum)/Math.max(1,items.length-1)));
@@ -1394,7 +1400,7 @@ function render(){
   else{
     $("multiHost").innerHTML="";$("calcWrap").hidden=false;
     const r=calcInto($("s3"));
-    $("goldInfo").textContent=r.dl&&!r.badgeFits?"плашка срока не влезла, осталась на обложке":"";
+    $("goldInfo").textContent=r.dl&&!r.badgeFits?"срок условий — в заголовке карточки под планировкой":"";
     mapInto($("sMap"),$("mapCap"),$("mapWrap"));
   }
   partnersSlide();promoSlide();interiorsSlide();if(st.mode==="multi"){$("intWrap").hidden=true;$("mapWrap").hidden=true}reasonsSlide();partnerExtraSlides();numberSlides();
