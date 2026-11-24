@@ -514,6 +514,8 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 .canvas .edge,.canvas .rc,.canvas .ptable{box-shadow:none!important;box-sizing:border-box;border:1.5px solid rgba(255,255,255,.14);border-top-color:rgba(255,255,255,.4);border-bottom-color:rgba(255,255,255,0)}
 .canvas .rc .n{background:none!important;-webkit-text-fill-color:currentColor;color:#d4dcdf}
 .canvas .reasons.sky .rc .n{color:#d9b06a}
+/* html2canvas рисует цифры без tabular-nums — иначе между группами цифр «гуляют» пробелы */
+.canvas *{font-variant-numeric:normal!important}
 .canvas .nyc .dl span{background:none!important;-webkit-text-fill-color:currentColor;color:#e6bd73}
 .canvas .days .bonus{background:none!important;-webkit-text-fill-color:currentColor;color:#dcb47a}
 .canvas .cw .cwlink span{background:none!important;-webkit-text-fill-color:currentColor;color:#dde9ee}
@@ -541,7 +543,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 19-55</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 20-10</span></p>
   </header>
 
   <div class="side">
