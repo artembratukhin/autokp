@@ -543,7 +543,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-24 20-40</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-25 16-55</span></p>
   </header>
 
   <div class="side">
@@ -586,6 +586,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
         <select id="share"><option value="1000">Целый юнит</option><option value="500">1/2</option><option value="250">1/4</option><option value="125">1/8</option></select></label>
       <p class="note" id="shareNote" hidden></p>
       <input type="checkbox" id="showAll" hidden>
+      <label class="check full"><input type="checkbox" id="showRes"> Показывать юниты в резерве</label>
       <p class="hint" id="dataStatus">Загружаю прайс…</p>
       <button type="button" id="reload" class="btn full" hidden>Загрузить прайс</button>
       <label class="full">Заголовок обложки
@@ -1107,6 +1108,7 @@ const NAME_IN_PRICES={aqua:"Aqua",fc:"Family Club",villas:"Villas",riviera:"Rivi
 const LAT2CYR={c:"с",o:"о",e:"е",p:"р",a:"а",x:"х",C:"С",O:"О",E:"Е",P:"Р",A:"А",X:"Х",B:"В",M:"М",H:"Н",K:"К",T:"Т"};
 const normStatus=s=>String(s||"").replace(/[coepaxCOEPAXBMHKT]/g,c=>LAT2CYR[c]).trim().toLowerCase();
 const isFree=s=>normStatus(s).startsWith("свободно");
+const isRes=s=>normStatus(s).startsWith("резерв");
 const toNum=v=>{const n=parseFloat(String(v??"").replace(/[^\d,.-]/g,"").replace(",","."));return isFinite(n)?n:0};
 const pad2=v=>String(v).padStart(2,"0");
 const natural=(x,y)=>x.id.localeCompare(y.id,"ru",{numeric:true});
@@ -1226,10 +1228,10 @@ async function loadLive(){
 
 function fillUnits(){fillUnitOptions();applyUnit()}
 function fillUnitOptions(){
-  const all=UNITS[$("obj").value]||[],showAll=$("showAll").checked;
+  const all=UNITS[$("obj").value]||[],showAll=$("showAll").checked,showRes=$("showRes").checked;
   const sh=$("share").value;
   // В долях — только юниты, у которых в долевом прайсе есть выбранная доля; пропорционально не считаем
-  const list=sh!=="1000"?all.filter(u=>u.shares&&u.shares[sh]):(showAll?all:all.filter(u=>u.free)).filter(u=>u.price>0);
+  const list=sh!=="1000"?all.filter(u=>u.shares&&u.shares[sh]):(showAll?all:all.filter(u=>u.free||showRes&&isRes(u.status))).filter(u=>u.price>0);
   const prev=$("unit").value;
   $("unit").innerHTML=list.length?list.map(u=>`<option value="${esc(u.id)}">${esc(u.id)}${u.cat?" · "+esc(u.cat):""}${sh!=="1000"?"":(u.free?"":" · "+esc(u.status||"не свободен"))}</option>`).join(""):`<option value="">— ${sh!=="1000"?"нет юнитов с частью "+SHARE_LBL[sh]:"нет юнитов"} —</option>`;
   if(list.find(u=>u.id===prev))$("unit").value=prev;else if(list.find(u=>u.id==="1511"))$("unit").value="1511";
@@ -1730,7 +1732,7 @@ function setProj(v){
   $("obj").dispatchEvent(new Event("change",{bubbles:true}));
   if(st.mode==="multi"){KP=[snap()];CUR=0;renderList();render()} // юниты другого проекта в сборное не переносим
 }
-$("f").addEventListener("input",e=>{if(e.target.id==="showAll")fillUnits();else if(e.target.id==="share")fillUnits();else if(e.target.id==="unit"||e.target.id==="manual")applyUnit();else render()});
+$("f").addEventListener("input",e=>{if(e.target.id==="showAll"||e.target.id==="showRes")fillUnits();else if(e.target.id==="share")fillUnits();else if(e.target.id==="unit"||e.target.id==="manual")applyUnit();else render()});
 $("reload").addEventListener("click",loadLive);
 $("f").addEventListener("change",e=>{if(e.target.id==="obj"){const v=e.target.value;$("itc").value=(v==="villas"||v==="riviera")?9:7;$("gdinst").value=(v==="villas"||v==="riviera")?7:5;$("final").closest("label").hidden=v==="sky";fillUnits()}});
 $("f").addEventListener("submit",e=>e.preventDefault());
