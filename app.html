@@ -513,6 +513,8 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 /* html2canvas не умеет текст с градиентной заливкой — даём сплошной цвет */
 .canvas .edge,.canvas .rc,.canvas .ptable{box-shadow:none!important;box-sizing:border-box;border:1.5px solid rgba(255,255,255,.14);border-top-color:rgba(255,255,255,.4);border-bottom-color:rgba(255,255,255,0)}
 .canvas .rc .n{background:none!important;-webkit-text-fill-color:currentColor;color:#d4dcdf}
+.calcslide .optt{position:absolute;left:830px;top:62px;font-family:var(--f-disp);font-size:30px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;white-space:nowrap}
+.calcslide.gl .optt{font-family:"Brygada 1918",Georgia,serif;font-size:38px;font-weight:600;letter-spacing:.01em;text-transform:none;color:#ecd2a2;top:72px}
 .canvas .reasons.sky .rc .n{color:#d9b06a}
 /* html2canvas рисует цифры без tabular-nums — иначе между группами цифр «гуляют» пробелы */
 .canvas *{font-variant-numeric:normal!important}
@@ -543,7 +545,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-25 16-55</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-27 15-10</span></p>
   </header>
 
   <div class="side">
@@ -573,6 +575,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
         <ul class="kplist" id="kpList"></ul>
         <button type="button" id="addUnit" class="btn full">+ Добавить юнит</button>
         <label class="check full"><input type="checkbox" id="sameTerms" checked> Одинаковые условия оплаты для всех юнитов</label>
+        <label class="check full"><input type="checkbox" id="optMode"> Сравнение вариантов покупки: «Вариант №1, №2…», без слайда «Итого»</label>
         <p class="hint">Поля ниже меняют выделенный юнит. Новый юнит копирует его условия — выберите другой номер.</p>
       </div>
       <label>Объект
@@ -912,7 +915,7 @@ const T={
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
   gdDuringY:"Гарантированный доход в год на период рассрочки",gdAfterY:"Гарантированный доход в год после рассрочки",
-  terms:"Условия покупки:",full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,untilShort:d=>`Условия действуют до ${d}`,gdYearUp:"Повышенный гарантированный доход в год*",nyHead:"Привилегии повышенного<br>гарантированного дохода",nyUntil:d=>`Условия действуют до ${d}`,nyNote:d=>`Повышенный гарантированный доход<br>действует при условии оплаты до ${d}.`,
+  terms:"Условия покупки:",option:n=>`Условия покупки — вариант №${n}`,full:"100% оплата",until:d=>`Специальные условия<br>действуют только до ${d}`,untilLine:d=>`Специальные условия действуют только до ${d}`,untilShort:d=>`Условия действуют до ${d}`,gdYearUp:"Повышенный гарантированный доход в год*",nyHead:"Привилегии повышенного<br>гарантированного дохода",nyUntil:d=>`Условия действуют до ${d}`,nyNote:d=>`Повышенный гарантированный доход<br>действует при условии оплаты до ${d}.`,
   plan:"Планировка",planS:"подтянется с Диска",cover:"Фото обложки — подтянется с Диска"},
  en:{kicker:"Commercial offer",heads:["Hotel real estate\nfor investment","The privilege of guaranteed income during the installment payment period","Increased guaranteed income"],
   area:"square footage:",room:"room:",floor:"floor:",villa:"villa:",plot:"land plot:",m2:"m<sup>2</sup>",
@@ -925,7 +928,7 @@ const T={
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
   gdDuringY:"Guaranteed annual income during the installment period",gdAfterY:"Guaranteed annual income after the installment period",
-  terms:"Terms of purchase:",full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,untilShort:d=>`Terms valid until ${d}`,gdYearUp:"Increased guaranteed annual income*",nyHead:"Increased<br>guaranteed income",nyUntil:d=>`Terms valid until ${d}`,nyNote:d=>`The increased guaranteed income applies<br>subject to payment by ${d}.`,
+  terms:"Terms of purchase:",option:n=>`Terms of purchase — Option #${n}`,full:"100% payment",until:d=>`Special terms valid<br>until ${d}`,untilLine:d=>`Special terms valid until ${d}`,untilShort:d=>`Terms valid until ${d}`,gdYearUp:"Increased guaranteed annual income*",nyHead:"Increased<br>guaranteed income",nyUntil:d=>`Terms valid until ${d}`,nyNote:d=>`The increased guaranteed income applies<br>subject to payment by ${d}.`,
   plan:"Floor plan",planS:"will be pulled from Drive",cover:"Cover photo — will be pulled from Drive"}
 };
 const st={lang:"ru",pay:"inst",font:"o",discUnit:"pct",pvUnit:"pct",mode:"one",proj:"wgbg"};
@@ -1421,7 +1424,7 @@ function calcInto(el){
   const top=obj==="gl"?TOP:TOP+Math.max(0,(AVAIL-sum-gap*(items.length-1))/2); // Grand Life: карточки от верха, как в макете
 
   el.innerHTML=`${NY?`<img class="nyd back" src="partners/ny2026/ca_rib_r.png" style="left:1007px;top:420px;width:913px" alt="">`:""}<div class="left"><div class="cat goldfill edge">${shLbl?(l==="ru"?`${shLbl} часть `:`${shLbl} part of `):""}${esc(cat)}</div><div class="specs">${sp.map(s=>`<span>${s}</span>`).join("")}</div>
-   ${planHtml(L,cat)}${bottom}${badge}</div>${logo()}
+   ${planHtml(L,cat)}${bottom}${badge}</div>${logo()}${OPT?`<div class="optt">${L.option(OPT)}</div>`:""}
    <div class="cards" style="top:${top}px;gap:${gap}px">${items.map(i=>i.html).join("")}</div>${NY?nyDecor(L,dl):""}`;
   el.classList.toggle("ny",NY);
 
@@ -1496,7 +1499,7 @@ function itemLabel(o){
   return`${NAME_IN_PRICES[o.obj]} ${esc(o.unit||o.room||"—")}${sh?" · "+sh:""} <small>· ${p?eur(p):"нет цены"} · ${o.pay==="inst"?"рассрочка "+esc(o.months)+" мес":"100%"}</small>`;
 }
 function renderList(){
-  $("kpList").innerHTML=KP.map((o,i)=>`<li class="${i===CUR?"on":""}"><button type="button" class="sel" data-a="sel" data-i="${i}">${i+1}. ${itemLabel(o)}</button>
+  $("kpList").innerHTML=KP.map((o,i)=>`<li class="${i===CUR?"on":""}"><button type="button" class="sel" data-a="sel" data-i="${i}">${$("optMode").checked?"Вариант "+(i+1):i+1+"."} ${itemLabel(o)}</button>
     <button type="button" class="ic" data-a="up" data-i="${i}" title="Выше" ${i?"":"disabled"}>↑</button>
     <button type="button" class="ic" data-a="del" data-i="${i}" title="Убрать из КП" ${KP.length>1?"":"disabled"}>✕</button></li>`).join("");
 }
@@ -1513,6 +1516,7 @@ function setMode(v){
   if(v==="multi"&&!KP.length){KP=[snap()];CUR=0}
   renderList();render();
 }
+$("optMode").addEventListener("change",e=>{if(e.target.checked)$("sameTerms").checked=false;render()});
 $("addUnit").addEventListener("click",()=>{KP[CUR]=snap();KP.push(snap());CUR=KP.length-1;renderList();render();$("unit").focus()});
 $("kpList").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;const i=+b.dataset.i,a=b.dataset.a;
@@ -1522,9 +1526,10 @@ $("kpList").addEventListener("click",e=>{
   if(a==="del"&&KP.length>1){KP.splice(i,1);selectItem(Math.min(CUR>i?CUR-1:CUR===i?Math.max(0,i-1):CUR,KP.length-1))}
 });
 const TERM_IDS=["months","pv","gdmode","gdboost","promo"];
+let OPT=0; // номер варианта на слайде расчёта (режим «Сравнение вариантов»)
 function renderMulti(L){
   KP[CUR]=snap();
-  if($("sameTerms").checked){const c=KP[CUR];KP.forEach(k=>{k.pay=c.pay;TERM_IDS.forEach(id=>k[id]=c[id])})}
+  if($("sameTerms").checked&&!$("optMode").checked){const c=KP[CUR];KP.forEach(k=>{k.pay=c.pay;TERM_IDS.forEach(id=>k[id]=c[id])})}
   renderList();
   $("calcWrap").hidden=true;
   const host=$("multiHost");
@@ -1534,18 +1539,21 @@ function renderMulti(L){
     `<div class="sw" data-title="Итого по КП"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide summary"></div></div></div>`+
     KP.map(o=>(isMap(o)?`<div class="sw" data-title="Генплан · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||""))}"><p class="cap"><span class="num"></span><span class="mc"></span></p><div class="frame"><div class="slide mapslide"></div></div></div>`:"")+
       `<div class="sw" data-title="Интерьер · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="ic"></span></p><div class="frame"><div class="slide interiors"></div></div></div>`).join("");
-  const ws=[...host.children],Ms=[],seenInt=new Set();let w=KP.length+1;
+  const ws=[...host.children],Ms=[],seenInt=new Set(),seenMap=new Set();let w=KP.length+1;
   KP.forEach((o,i)=>{
     const cw=ws[i],mw=isMap(o)?ws[w++]:null,iw=ws[w++];
+    OPT=$("optMode").checked?i+1:0;
     withItem(o,()=>{
       const r=calcInto(cw.querySelector(".slide"));Ms.push(r.m);
-      if(mw)mapInto(mw.querySelector(".slide"),mw.querySelector(".mc"),mw);
+      if(mw&&seenMap.has(o.obj+"|"+o.unit))mw.hidden=true;else if(mw){seenMap.add(o.obj+"|"+o.unit);mapInto(mw.querySelector(".slide"),mw.querySelector(".mc"),mw)}
       const f=interiorsInto(iw.querySelector(".slide"),iw.querySelector(".ic"),iw);
       if(f&&seenInt.has(f.id))iw.hidden=true; // тот же интерьер уже есть в КП (юниты одной категории) — не повторяем
       else if(f)seenInt.add(f.id);
     });
   });
+  OPT=0;
   const sw=ws[KP.length],g=summaryInto(sw.querySelector(".slide"),Ms,L);
+  sw.hidden=$("optMode").checked; // сравнение вариантов — без «Итого»
   
 }
 /* Итоговый слайд: суммы по всем юнитам. Есть хотя бы один Sky Castle — без цены на окончание, перепродажи и «Роста стоимости в год».
