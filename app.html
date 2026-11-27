@@ -545,7 +545,7 @@ label.check input{width:18px;height:18px;flex:0 0 18px;min-width:18px;margin:0;a
 <div class="app">
   <header class="top">
     <h1>АвтоКП</h1>
-    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-27 15-10</span></p>
+    <p>Выберите объект и юнит, задайте условия и скачайте PDF. <b id="priceMonth"></b><span id="priceTs"></span> <span style="opacity:.55">· версия 2026-11-27 15-30</span></p>
   </header>
 
   <div class="side">
@@ -911,7 +911,7 @@ const T={
   gdDuring:"Гарантированный доход на период рассрочки",gdAfter:"Гарантированный доход после полной оплаты",days:"Дни отдыха",
   d60:"60 дней",d60s:"Отдых в отельном номере<br>(могут быть обменены по программе RCI)",bonus:n=>`${n} ${plural(n,"день","дня","дней")} в подарок`,itc:n=>`${n} ${plural(n,"день","дня","дней")}`,itcs:"Отдых по программе ITC",
   inst:m=>`Рассрочка на ${m} ${plural(m,"месяц","месяца","месяцев")}`,equal:m=>`${m} ${plural(m,"равный ежемесячный платёж","равных ежемесячных платежа","равных ежемесячных платежей")}`,pv:p=>`Первый взнос — ${Math.round(p)}%`,monthly:"Ежемесячный платёж",monthlyFor:m=>`Ежемесячный платёж · ${m} ${plural(m,"месяц","месяца","месяцев")}`,
-  pmTitle:"Условия покупки",pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
+  pmTitle:"Условия покупки",pmTitleN:n=>`Условия покупки — вариант №${n}`,pmNow:p=>`${p}% — сейчас`,pmLater:(p,m)=>`${p}% — через ${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmFirst:"первоначальный<br>взнос",pmRest:m=>`оплата через<br>${m} ${plural(m,"месяц","месяца","месяцев")}`,
   pmCardRest:(p,m)=>`${p}% через ${m} ${plural(m,"месяц","месяца","месяцев")}`,pmYield:"Гарантированная доходность на период рассрочки",
   gdDuringY:"Гарантированный доход в год на период рассрочки",gdAfterY:"Гарантированный доход в год после рассрочки",
@@ -924,7 +924,7 @@ const T={
   gdDuring:"Guaranteed income during the installment period (annual)",gdAfter:"Guaranteed income upon completion of the payment plan (annual)",days:"Complimentary vacation days",
   d60:"60 days",d60s:"Personal stay in a hotel room<br>(can be exchanged under the RCI program)",bonus:n=>`${n} bonus ${n===1?"day":"days"}`,itc:n=>`${n} days`,itcs:"ITC program vacation",
   inst:m=>`Installment ${m} months`,equal:m=>m===1?"1 payment":`${m} equal monthly payments`,pv:p=>`First installment ${Math.round(p)}%`,monthly:"Monthly payment",monthlyFor:m=>`Monthly payment · ${m} months`,
-  pmTitle:"Terms of purchase",pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
+  pmTitle:"Terms of purchase",pmTitleN:n=>`Terms of purchase — Option #${n}`,pmNow:p=>`${p}% — now`,pmLater:(p,m)=>`${p}% — in ${m} months`,
   pmFirst:"first<br>installment",pmRest:m=>`payment in<br>${m} months`,
   pmCardRest:(p,m)=>`${p}% in ${m} months`,pmYield:"Guaranteed yield during the installment period",
   gdDuringY:"Guaranteed annual income during the installment period",gdAfterY:"Guaranteed annual income after the installment period",
@@ -1526,6 +1526,7 @@ $("kpList").addEventListener("click",e=>{
   if(a==="del"&&KP.length>1){KP.splice(i,1);selectItem(Math.min(CUR>i?CUR-1:CUR===i?Math.max(0,i-1):CUR,KP.length-1))}
 });
 const TERM_IDS=["months","pv","gdmode","gdboost","promo"];
+const optOn=()=>st.mode==="multi"&&KP.length>0&&$("optMode").checked;
 let OPT=0; // номер варианта на слайде расчёта (режим «Сравнение вариантов»)
 function renderMulti(L){
   KP[CUR]=snap();
@@ -1535,14 +1536,18 @@ function renderMulti(L){
   const host=$("multiHost");
   // порядок: расчёты по всем юнитам → «Итого» → генпланы вилл/таунхаусов (перед «8 причинами»)
   const isMap=o=>o.obj==="villas"||o.obj==="riviera";
-  host.innerHTML=KP.map((o,i)=>`<div class="sw" data-title="Расчёт · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide"></div></div></div>`).join("")+
+  const opt=$("optMode").checked,pmOf=o=>opt&&o.pay==="inst"&&o.promo&&o.obj!=="gl";
+  host.innerHTML=KP.map((o,i)=>(pmOf(o)?`<div class="sw" data-title="Условия покупки (акция) · вариант ${i+1}"><p class="cap"><span class="num"></span><span></span></p><div class="frame"><div class="slide partners promo"></div></div></div>`:"")+`<div class="sw" data-title="Расчёт · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide"></div></div></div>`).join("")+
     `<div class="sw" data-title="Итого по КП"><p class="cap"><span class="num"></span><span class="gi"></span></p><div class="frame"><div class="slide calcslide summary"></div></div></div>`+
     KP.map(o=>(isMap(o)?`<div class="sw" data-title="Генплан · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||""))}"><p class="cap"><span class="num"></span><span class="mc"></span></p><div class="frame"><div class="slide mapslide"></div></div></div>`:"")+
       `<div class="sw" data-title="Интерьер · ${esc(NAME_IN_PRICES[o.obj]+" "+(o.unit||o.room||""))}"><p class="cap"><span class="num"></span><span class="ic"></span></p><div class="frame"><div class="slide interiors"></div></div></div>`).join("");
-  const ws=[...host.children],Ms=[],seenInt=new Set(),seenMap=new Set();let w=KP.length+1;
+  const ws=[...host.children],Ms=[],seenInt=new Set(),seenMap=new Set();let c=0;
+  const pws=[],cws=KP.map(o=>{if(pmOf(o))pws.push(ws[c++]);else pws.push(null);return ws[c++]});
+  const sumW=ws[c++];let w=c;
   KP.forEach((o,i)=>{
-    const cw=ws[i],mw=isMap(o)?ws[w++]:null,iw=ws[w++];
-    OPT=$("optMode").checked?i+1:0;
+    const cw=cws[i],mw=isMap(o)?ws[w++]:null,iw=ws[w++];
+    OPT=opt&&!pws[i]?i+1:0; // заголовок «Вариант №» на расчёте — только если перед ним нет слайда условий по акции
+    if(pws[i])promoInto(pws[i].querySelector(".slide"),[o],L,i+1);
     withItem(o,()=>{
       const r=calcInto(cw.querySelector(".slide"));Ms.push(r.m);
       if(mw&&seenMap.has(o.obj+"|"+o.unit))mw.hidden=true;else if(mw){seenMap.add(o.obj+"|"+o.unit);mapInto(mw.querySelector(".slide"),mw.querySelector(".mc"),mw)}
@@ -1552,7 +1557,7 @@ function renderMulti(L){
     });
   });
   OPT=0;
-  const sw=ws[KP.length],g=summaryInto(sw.querySelector(".slide"),Ms,L);
+  const sw=sumW,g=summaryInto(sw.querySelector(".slide"),Ms,L);
   sw.hidden=$("optMode").checked; // сравнение вариантов — без «Итого»
   
 }
@@ -1674,12 +1679,13 @@ function pmPie(pvp,R,cx,cy,gap,stroke,fillRest,strokeCol){
   return {svg:`<path d="${ring}" fill="none" stroke="${strokeCol}" stroke-width="${stroke}" stroke-linejoin="round"/><path d="${wedge}" fill="${fillRest}"/>`,bis};
 }
 const pmIcon=pvp=>`<svg class="pmic" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">${pmPie(pvp,26,32,32,3,2.5,"currentColor","currentColor").svg}</svg>`;
+let PMG=0;
 function pmArtHtml(pvp,m,L){
-  const R=237,cx=300,cy=300,pie=pmPie(pvp,R,cx,cy,24,6,"url(#pmg)","#fff"),bis=pie.bis,opp=bis+Math.PI;
+  const gid="pmg"+(++PMG),R=237,cx=300,cy=300,pie=pmPie(pvp,R,cx,cy,24,6,`url(#${gid})`,"#fff"),bis=pie.bis,opp=bis+Math.PI;
   // подписи: остаток — у золотого сектора, первый взнос — с противоположной стороны (выравнивание вправо)
   const rx=cx+24*Math.cos(bis)+Math.cos(bis)*R*.98+12,ry=cy+Math.sin(bis)*R*.7,lx=cx+Math.cos(opp)*R*.78,ly=cy+Math.sin(opp)*R*.62;
   return `<div class="pmart"><svg viewBox="0 0 600 600" width="600" height="600" aria-hidden="true">
-     <defs><linearGradient id="pmg" x1="0" x2="1"><stop offset="0" stop-color="#9c7a4c"/><stop offset=".35" stop-color="#d8b583"/><stop offset=".7" stop-color="#a5793f"/><stop offset="1" stop-color="#c49a62"/></linearGradient></defs>${pie.svg}</svg>
+     <defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="#9c7a4c"/><stop offset=".35" stop-color="#d8b583"/><stop offset=".7" stop-color="#a5793f"/><stop offset="1" stop-color="#c49a62"/></linearGradient></defs>${pie.svg}</svg>
      <div class="pml" style="right:${600-lx}px;top:${ly}px"><b data-t="${pvp}%">${pvp}%</b><span data-t="${L.pmFirst.replace(/<br>/g," ")}">${L.pmFirst}</span></div>
      <div class="pmr" style="left:${rx}px;top:${ry}px"><b data-t="${100-pvp}%">${100-pvp}%</b><span data-t="">${L.pmRest(m)}</span></div></div>`;
 }
@@ -1695,7 +1701,12 @@ function promoSlide(){
   const L=T[st.lang],l=st.lang,multi=st.mode==="multi"&&KP.length,w=$("promoWrap");
   const items=multi?KP:[snap()];
   const on=st.proj!=="gl"&&items.every(o=>o.pay==="inst"&&o.promo&&o.obj!=="gl")&&items.every(o=>o.pv===items[0].pv&&(o.pvUnit||"pct")===(items[0].pvUnit||"pct")&&o.months===items[0].months);
-  w.hidden=!on;if(!on)return;
+  w.hidden=!on||optOn();if(!on||optOn())return;
+  promoInto($("sP"),items,L,0);
+}
+/* Слайд «Условия покупки» по акции для набора юнитов; n — номер варианта (режим «Сравнение вариантов») */
+function promoInto(el,items,L,n){
+  const l=st.lang;
   // суммы по юнитам (цена со скидкой)
   let eff=0,gdb=0,pvSum=0;const inEur=(items[0].pvUnit||"pct")==="eur";
   items.forEach(o=>{const pr=toNum(o.price),d=toNum(o.disc),b=o.discUnit==="pct"?pr*d/100:d,e=inEur?Math.round(pr-b):pr-b,
@@ -1704,13 +1715,13 @@ function promoSlide(){
   // первый взнос суммой (€): проценты на круге и в подписях — округлённые до целых, суммы — точные
   const pvp=inEur?Math.min(99,Math.max(1,Math.round(pvSum/eff*100))):toNum(items[0].pv);
   const pv=Math.round(inEur?pvSum:eff*pvp/100),rest=inEur?Math.round(eff)-pv:Math.round(eff-eff*pvp/100); // их сумма = стоимость на слайде расчёта
-  $("sP").innerHTML=`${logo(kpObj())}<h2>${L.pmTitle}</h2>
+  el.innerHTML=`${logo(kpObj())}<h2>${n?L.pmTitleN(n):L.pmTitle}</h2>
    <div class="pmsub"><span>${L.pmNow(pvp)}</span><span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0Z" fill="#fff"/></svg>${L.pmLater(100-pvp,m)}</span></div>
    ${pmArtHtml(pvp,m,L)}
    <div class="pmcards">${card(L.pv(pvp),eur(pv))}${card(L.pmCardRest(100-pvp,m),eur(rest))}${card(L.pmYield,pct(y,l),{gold:true})}${card(L.gdDuringY,eur(gdb),{gold:true})}</div>`;
-  pmHalo($("sP"));
-  $("sP").querySelectorAll(".pmcards .card .h").forEach(h=>{const t=h.querySelector("span")||h;let f=20;h.style.fontSize=f+"px";while((t.scrollWidth>t.clientWidth+1||h.scrollWidth>h.clientWidth+1)&&f>14){f-=.5;h.style.fontSize=f+"px"}});
-  $("sP").classList.toggle("sky",allSky());
+  pmHalo(el);
+  el.querySelectorAll(".pmcards .card .h").forEach(h=>{const t=h.querySelector("span")||h;let f=20;h.style.fontSize=f+"px";while((t.scrollWidth>t.clientWidth+1||h.scrollWidth>h.clientWidth+1)&&f>14){f-=.5;h.style.fontSize=f+"px"}});
+  el.classList.toggle("sky",allSky());
 }
 $("promoPv").addEventListener("change",()=>{
   const v=$("promoPv").value;
